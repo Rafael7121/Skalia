@@ -1,0 +1,276 @@
+tpa:
+  # Tempo para aceitar um pedido antes que ele expire.
+  requestTimeoutSeconds: 60
+
+  # Atraso depois de /tpa aceitar. Dano PvP durante este período cancela o teleporte.
+  teleportDelaySeconds: 5
+
+  # Tempo que o jogador continua marcado em combate após causar ou receber dano PvP.
+  combatDurationSeconds: 15
+
+playerActivity:
+  # Jogadores sem movimento, camera, comandos ou interacoes por este tempo ficam AFK.
+  # O estado e silencioso no chat e aparece somente no console do servidor.
+  awayAfterSeconds: 180
+
+serverCapacity:
+  # Ajusta 24 <-> 48 <-> 96 <-> 100 conforme jogadores entram e saem.
+  enabled: false
+  maximumPlayers: 100
+  # Ao detectar um novo SkaliaDeps.dll, executa openmod reload apos a copia terminar.
+  reloadOnDllChange: true
+
+serverBot:
+  # SKALIA: chama todos os bots de bots.json quando o mapa termina de carregar.
+  autoCallOnStart: true
+  ipAddress: "127.0.0.2"
+  port: 27018
+  respawnDelaySeconds: 3
+  movement:
+    enabled: true
+    avoidPlayersWithinMeters: 30
+    turnSpeedDegreesPerSecond: 120
+    obstacleCheckDistanceMeters: 1.75
+  objectives:
+    lootSearchRadiusMeters: 100
+    lootPickupDistanceMeters: 3
+    timeoutSeconds: 120
+  combat:
+    zombieDetectionRadiusMeters: 50
+    attackDistanceMeters: 1.45
+  # 0.1.172: comportamento novo dos bots. Apagar uma linha volta ao padrao
+  # (o mesmo valor que esta aqui). Valor invalido so gera aviso no log.
+  behavior:
+    meleeAimVariation: true     # golpe ~90% na cabeca com pequena variacao; false = sempre a cabeca
+    hordeCaution: true          # ferido no meio da horda: agacha e so luta com o que esta perto
+    stealthApproachMeters: 12   # ate quantos metros vai agachado atras de zumbi distraido (4 a 25)
+    lootLook: true              # para no item, olha meio segundo e pega; false = pega assim que alcanca
+    humanTurning: true          # giro que acelera nas viradas grandes; false = giro fixo do turnSpeedDegreesPerSecond
+    routeHops: true             # linha reta ao ar livre quando a rota faz zigue-zague
+    freshDeathAvoidance: true   # sai e nao pega loot a 40m de onde outro bot morreu nos ultimos 2 min
+
+home:
+  # Atraso antes de teleportar. Dano PvP durante este período cancela o teleporte.
+  teleportDelaySeconds: 5
+
+# Benefícios por cargo. Cargos superiores mantêm os mesmos comandos básicos e
+# apenas ampliam homes e o Vault. Em caso de múltiplos cargos, valem os maiores limites.
+roleBenefits:
+  default:
+    homes: 2
+    vaultWidth: 6
+    vaultHeight: 6
+  roles:
+    vip:
+      homes: 3
+      vaultWidth: 8
+      vaultHeight: 8
+    admin:
+      homes: 3
+      vaultWidth: 8
+      vaultHeight: 8
+
+inventorySort:
+  # Effect UI do pacote de interface da Workshop (3765696023), que o SKALIA nao usa mais.
+  enabled: false
+  # Comando /sort, independente da UI acima: jogadores e bots organizam o
+  # inventario digitando /sort no chat.
+  commandEnabled: true
+  # Exibe o botao somente enquanto o inventario esta aberto. O plugin monitora
+  # os gestos nativos INVENTORY_START e INVENTORY_STOP enviados pela tecla G.
+  showButton: true
+  effectId: 59111
+  effectKey: 5911
+  cooldownSeconds: 1
+
+  # Origem do preenchimento: topLeft, topRight, bottomLeft ou bottomRight.
+  packingOrigin: topLeft
+
+  # false (Exclude) preserva a quantidade de itens de cada pagina, mas permite
+  # trocas entre elas para cumprir a prioridade. true (Combine) redistribui tudo.
+  # Direcao para cima prioriza Hands ate Pants; para baixo, Pants ate Hands.
+  combinePagesByDefault: true
+
+  # Ordem: compact, type (grupos de categoria), name ou original.
+  # O item atualmente equipado e reequipado automaticamente apos ser reorganizado.
+  # Em type, cada jogador define e salva pelo Settings a prioridade dos 5 grupos.
+  # Inventario e storage compartilham a ordem por padrao, mas podem ser separados.
+  packingOrder: type
+
+  # Permite girar itens para reduzir espacos vazios.
+  rotateItems: true
+
+experienceBar:
+  # HUD de rank e barra de 2 pixels no limite inferior da tela.
+  # Effect UI do pacote de interface da Workshop (3765696023), que o SKALIA nao usa mais.
+  enabled: false
+  effectId: 59113
+  effectKey: 5913
+  # Um JSON por jogador, do SKALIA.
+  dataDirectory: "Skalia/data/player-stats"
+  points:
+    zombie: 10
+    megaZombie: 100
+    playerKill: 250
+    quest: 200
+  progression:
+    baseRequirement: 1000
+    requirementGrowth: 250
+
+administration:
+  # Multiplicador de velocidade enquanto o modo Deus esta ativo (entre 1.0 e 3.0).
+  godSpeedMultiplier: 1.5
+
+  # Estes usuários recebem permissões pelo OpenMod, sem o azul/martelo de admin nativo.
+  # Exemplo: - "76561198000000000"
+  hiddenOpenModAdmins: []
+
+chat:
+  # Prefixo exibido antes do nome de todos os jogadores.
+  namePrefix: ""
+
+  # Cores HTML por ID de cargo. O cargo com maior prioridade vence.
+  roleColors:
+    default: "#FFFFFF"
+    vip: "#55FF55"
+
+automaticMessages:
+  # Envia uma mensagem para todos os jogadores conectados no intervalo abaixo.
+  enabled: true
+  intervalSeconds: 720
+
+  # As mensagens são exibidas em sequência e aceitam a formatação rich text do Unturned.
+  messages:
+    - "Em California 2, confira a categoria da munição compatível antes de recarregar sua arma."
+    - "Carvão é um recurso valioso em California 2, usado na produção de filtros e aço."
+    - "A impressora 3D é uma bancada importante para produzir filtros e copiar determinados itens."
+    - "Para fabricar munição e explosivos, procure e utilize uma Bancada de Armas."
+    - "Cartões de acesso são essenciais para avançar e abrir esconderijos espalhados por California 2."
+    - "Servidores são raros, mas oferecem uma boa fonte de componentes eletrônicos."
+    - "Assaltar bancos pode render recursos valiosos, mas prepare-se antes de entrar."
+    - "As cavernas sob California 2 são profundas; leve suprimentos e planeje a saída."
+    - "A floresta queimada acima de Toulumne possui bastante carvão."
+
+groundCleanup:
+  # A varredura ocorre a cada 10 minutos e preserva itens mais novos que 400 segundos.
+  # Remove somente itens derrubados por jogadores; o loot natural do mapa é preservado.
+  enabled: true
+  intervalSeconds: 600
+  minimumItemAgeSeconds: 400
+  # Limite de remocoes por frame durante a limpeza automatica.
+  itemsPerFrame: 25
+
+alicepackRewards:
+  # Alicepack vanilla. Pode ser trocada por outra mochila valida, se necessario.
+  enabled: true
+  itemId: 253
+
+  # Garante esta quantidade sempre que qualquer Mega Zombie morrer,
+  # inclusive se ele fizer parte de um Horde Beacon.
+  megaZombie:
+    enabled: true
+    quantity: 2
+
+  # Recompensa adicional gerada uma unica vez quando o Horde Beacon
+  # e concluido. Beacons destruidos ou abandonados nao recebem o item.
+  hordeBeacon:
+    enabled: true
+    quantity: 1
+
+zombieSpawns:
+  # Amplia o pool e o limite de zumbis de cada regiao somente em memoria.
+  # O mapa original nao e alterado. Valores entre 1.0 e 4.0.
+  enabled: true
+  generalMultiplier: 1.0
+
+  # Regioes que possuem spawn natural de Mega recebem esta quantidade.
+  # Horde Beacons e Megas de quests nao sao multiplicados. Valores entre 1 e 5.
+  megasPerRegion: 1
+
+  # Quando true, cada regiao com spawn natural de Mega recebe 1 Mega na geracao
+  # e, depois que ele morre, outro nasce assim que o cooldown vanilla de 10
+  # minutos termina, sem depender do sorteio de spawnpoint.
+  guaranteeMegas: false
+
+  # Overrides por mapa e indice de navmesh/regiao de spawn.
+  maps:
+    California2:
+      defaultMultiplier: 1.25
+      defaultMegasPerRegion: 1
+      navmeshes:
+        "16":
+          multiplier: 2.25
+          megasPerRegion: 3
+        "17":
+          multiplier: 2.25
+          megasPerRegion: 3
+
+spawnLoadouts:
+  # Cada mapa usa sua própria lista. O nome deve ser igual ao nome da pasta/mapa.
+  enabled: true
+  maps:
+    California2:
+      # Entrega exatamente uma destas roupas/variantes a cada nascimento.
+      randomEquipment:
+        - choices:
+            - 4234
+            - 4235
+            - 4236
+            - 4237
+            - 4238
+            - 4239
+            - 4240
+            - 4241
+          quantity: 1
+          quality: 100
+
+      # Estes itens sao entregues em todos os nascimentos no mapa.
+      equipment:
+        - id: 4301
+          quantity: 1
+          quality: 100
+        - id: 4400
+          quantity: 1
+          quality: 100
+
+    Arid Reborn:
+      # Roupas são vestidas; armas e utilizáveis tentam ocupar os slots de equipamento.
+      equipment:
+        - id: 19160
+          quantity: 1
+          quality: 100
+        - id: 19190
+          quantity: 1
+          quality: 100
+
+      # Estes itens vão para o inventário sem serem equipados.
+      items:
+        - id: 19053
+          quantity: 2
+          quality: 100
+        - id: 19633
+          quantity: 1
+          quality: 100
+
+    Washington:
+      equipment:
+        - id: 183
+          quantity: 1
+          quality: 100
+        - id: 2
+          quantity: 1
+          quality: 100
+
+      items:
+        - id: 13
+          quantity: 1
+          quality: 100
+        - id: 14
+          quantity: 1
+          quality: 100
+
+lootAmount:
+  # SKALIA: itens por ponto de loot do mapa (o launcher grava pela regra
+  # "Quantidade de loot"). O jogo para em 1 (Items/Spawn_Chance); acima
+  # disso o SKALIA DEPS poe os itens extras. 0 desliga.
+  spawnFactor: 0

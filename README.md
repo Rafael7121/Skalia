@@ -13,9 +13,11 @@ your own installation.
 - Steam, running and signed in
 - **Unturned** (Steam)
 - **Unturned Dedicated Server**, free on Steam under *Library > Tools*
-- The **SKALIA DEPS** OpenMod plugin (`SkaliaDeps.dll`) in the `plugins` folder
-  next to `SKALIA.exe`. It provides TPA, Home, Vault and the bots. It is not part
-  of this repository.
+- [OpenMod](https://openmod.github.io/openmod-docs/) installed in the Dedicated
+  Server (the `OpenMod.Unturned` module)
+- The **SKALIA DEPS** plugin (`SkaliaDeps.dll`) in a `plugins` folder next to
+  `SKALIA.exe`. It provides TPA, Home, Vault and the bots. Its source is in
+  [`src/Skalia.Deps`](src/Skalia.Deps).
 
 ## How to use
 
@@ -38,19 +40,22 @@ To connect by hand from Unturned (*Play > Connect*), use host `127.0.0.1`, port
 ## Building
 
 Needs the [.NET SDK](https://dotnet.microsoft.com/download) 8 or newer. The
-launcher targets .NET Framework 4.8, which ships with Windows.
+launcher targets .NET Framework 4.8, which ships with Windows. The plugin
+references the DLLs of your Unturned Dedicated Server and never copies them.
+
+Clone this repository into `<Unturned Dedicated Server>\Skalia` and run:
 
 ```
 build.cmd
 ```
 
-or
+It builds `SKALIA.exe` and `plugins\SkaliaDeps.dll` into the repository folder.
+If the repository is somewhere else, set `U3DSDir` first:
 
 ```
-dotnet build src/Skalia.Launcher/Skalia.Launcher.csproj -c Release
+set U3DSDir=C:\Program Files (x86)\Steam\steamapps\common\U3DS
+build.cmd
 ```
-
-The output is `src/Skalia.Launcher/bin/Release/net48/SKALIA.exe`.
 
 ## Project layout
 
@@ -62,6 +67,7 @@ The output is `src/Skalia.Launcher/bin/Release/net48/SKALIA.exe`.
 | `src/Skalia.Launcher/GameRules.cs` | Server rules and multipliers written to `Config.txt` |
 | `src/Skalia.Launcher/GamePaths.cs` | Finds Steam and the Dedicated Server |
 | `src/Skalia.Launcher/L.cs` | English and Brazilian Portuguese text |
+| `src/Skalia.Deps` | The SKALIA DEPS OpenMod plugin (bots, TPA, Home, Vault) |
 | `DESIGN.md` | Visual rules for the launcher |
 
 ## Languages

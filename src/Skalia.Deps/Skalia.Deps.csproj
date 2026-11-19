@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <PackageId>Skalia.Deps</PackageId>
+    <PackageDescription>SKALIA DEPS: plugin OpenMod base do SKALIA (TPA, Home, Vault, bots e tudo que os bots usam).</PackageDescription>
+    <Authors>SKALIA</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>openmod openmod-plugin unturned skalia</PackageTags>
+    <RootNamespace>SkaliaDeps</RootNamespace>
+    <AssemblyName>SkaliaDeps</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Product>SKALIA DEPS</Product>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
+    <NoWarn>$(NoWarn);NU1701;NU1702;CS0436;CS0618;CS0649;CS0169;CS0414</NoWarn>
+    <Version>0.1.0</Version>
+    <!-- Bots: 0.2.2x17 do servidor publico + x18 do Skalia. -->
+    <InformationalVersion>0.1.0-y17.18</InformationalVersion>
+    <PublicizerRuntimeStrategies>Unsafe</PublicizerRuntimeStrategies>
+    <PlatformTarget>x64</PlatformTarget>
+    <!-- Pasta do U3DS instalado. As DLLs do jogo so sao referenciadas, nunca copiadas. -->
+    <U3DSDir Condition="'$(U3DSDir)' == ''">..\..\..</U3DSDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="src\**\*.cs" />
+    <Reference Include="AstarPathfindingProject">
+      <HintPath>$(U3DSDir)\Unturned_Data\Managed\AstarPathfindingProject.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PackageTools">
+      <HintPath>$(U3DSDir)\Unturned_Data\Managed\PackageTools.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Drawing">
+      <HintPath>$(U3DSDir)\Unturned_Data\Managed\Drawing.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <PackageReference Include="OpenMod.Unturned" Version="3.8.10+a033121c" />
+    <PackageReference Include="OpenMod.Unturned.Redist" Version="3.26.1.1" />
+    <PackageReference Include="Krafs.Publicizer" Version="2.2.1">
+      <PrivateAssets>All</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Legacy2CPSWorkaround" Version="1.0.0">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Publicize Include="Assembly-CSharp" IncludeCompilerGeneratedMembers="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="config.yaml" />
+    <EmbeddedResource Include="translations.yaml" />
+  </ItemGroup>
+
+</Project>
