@@ -44,9 +44,3 @@ dotnet build -c Release -p:U3DSDir="C:\Program Files (x86)\Steam\steamapps\commo
 If this repository is cloned into `U3DS\Skalia`, `U3DSDir` can be left out.
 The output is `bin/Release/netstandard2.1/SkaliaDeps.dll`. Put it in the
 launcher's `plugins` folder.
-
-## Interface pack names
-
-Some UI element names start with `Bifrost`. They match the objects inside the
-Workshop interface pack 3765696023 and have to keep those names for that UI to
-work.

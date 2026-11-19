@@ -145,6 +145,7 @@ namespace Skalia.Launcher
             GameRules.ApplyToConfig(Path.Combine(m_Paths.ProfileDir, "Config.txt"), rules, managedKeys);
             WriteWorkshopConfig(settings);
             SeedWorkshopFromDefaultProfile();
+            EnsureOpenMod();
             CopyOpenModPackages();
             InstallPlugins(settings);
             WriteBots(settings);
@@ -271,6 +272,24 @@ namespace Skalia.Launcher
                 }
             }
             m_Log(copied + L.Tr(" item(ns) da Workshop reaproveitados de downloads anteriores."));
+        }
+
+        private void EnsureOpenMod()
+        {
+            if (OpenModInstaller.IsInstalled(m_Paths))
+            {
+                return;
+            }
+            m_Log(L.Tr("OpenMod não encontrado no Unturned Dedicated Server. Instalando (só na primeira vez)..."));
+            try
+            {
+                OpenModInstaller.Install(m_Paths, m_Log);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    L.Tr("não foi possível instalar o OpenMod (") + ex.Message + L.Tr("). Instale manualmente: ") + OpenModInstaller.ManualUrl, ex);
+            }
         }
 
         private void CopyOpenModPackages()

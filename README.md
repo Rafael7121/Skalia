@@ -13,8 +13,6 @@ your own installation.
 - Steam, running and signed in
 - **Unturned** (Steam)
 - **Unturned Dedicated Server**, free on Steam under *Library > Tools*
-- [OpenMod](https://openmod.github.io/openmod-docs/) installed in the Dedicated
-  Server (the `OpenMod.Unturned` module)
 - The **SKALIA DEPS** plugin (`SkaliaDeps.dll`) in a `plugins` folder next to
   `SKALIA.exe`. It provides TPA, Home, Vault and the bots. Its source is in
   [`src/Skalia.Deps`](src/Skalia.Deps).
@@ -22,6 +20,9 @@ your own installation.
 ## How to use
 
 1. Open `SKALIA.exe`. It finds the Dedicated Server through your Steam libraries.
+   The first time you click PLAY it also downloads and installs
+   [OpenMod](https://openmod.github.io/openmod-docs/) into the Dedicated Server
+   if it is not there yet.
 2. Pick a map, a difficulty and how much loot and how many zombies you want.
    Bots, world rules and server options are under **Advanced settings**.
 3. Click **PLAY**. SKALIA prepares the server and loads the map.
@@ -66,6 +67,7 @@ build.cmd
 | `src/Skalia.Launcher/ServerManager.cs` | Prepares the server profile, starts and stops the server, opens the game |
 | `src/Skalia.Launcher/GameRules.cs` | Server rules and multipliers written to `Config.txt` |
 | `src/Skalia.Launcher/GamePaths.cs` | Finds Steam and the Dedicated Server |
+| `src/Skalia.Launcher/OpenModInstaller.cs` | Installs OpenMod into the Dedicated Server when it is missing |
 | `src/Skalia.Launcher/L.cs` | English and Brazilian Portuguese text |
 | `src/Skalia.Deps` | The SKALIA DEPS OpenMod plugin (bots, TPA, Home, Vault) |
 | `DESIGN.md` | Visual rules for the launcher |
