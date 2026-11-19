@@ -498,9 +498,8 @@ namespace SkaliaDeps
             }
             var horizontal = new Vector2(to.x, to.z).magnitude;
             var wantPitch = 90f - Mathf.Atan2(to.y, horizontal) * Mathf.Rad2Deg;
-            var step = PvpTurnDegreesPerSecond * Time.fixedDeltaTime;
-            m_PvpHuntYaw = Mathf.MoveTowardsAngle(m_PvpHuntYaw, DirectionToYaw(to), step);
-            m_PvpHuntPitch = Mathf.Clamp(Mathf.MoveTowardsAngle(m_PvpHuntPitch, wantPitch, step * 0.7f), 0.5f, 179.5f);
+            // 0.1.0-y17.19: the players' hand (SkaliaBotPvpHandY).
+            StepPvpHand(ref m_PvpHuntYaw, ref m_PvpHuntPitch, DirectionToYaw(to), wantPitch, 0f, 0f, now);
             m_CurrentYaw = m_PvpHuntYaw;
             m_CurrentPitch = m_PvpHuntPitch;
             m_DesiredYaw = m_PvpHuntYaw;

@@ -485,6 +485,85 @@ namespace SkaliaDeps
             m_PvpPeekAnalog = analog;
         }
 
+        // 0.1.0-y17.19 (the tester, 19/11: "ele ficou olhando pra direcao do
+        // ghost depois de ter matado ele e nao voltou a atencao para o
+        // onca"). Test of 19/11, Vultox: hunting Onça by sound (sector 317,
+        // 00:54:50), it heard TheGhostSniper's round at it at 00:55:44 and
+        // took it as Onça's (any round in a fight with a man not yet seen
+        // was his): the sector went to 173 +-76, Ghost's side. Ghost's
+        // round hit it the same second, it turned on Ghost and remembered
+        // Onça "de onde veio o tiro" there; Ghost dead, it went back to
+        // Onça on that point and lay 40s (00:55:50-00:56:30) facing 161
+        // degrees, Ghost's body at 111, while Onça crawled up from 333-37
+        // degrees and shot it from 61m (81 to 19). Now the round heard is
+        // kept as whose it was, with the clue on the old man before it; on
+        // turning to the new man for a round of his that hit it, or for
+        // seeing him on that side, the old man keeps his own clue.
+        private Player? m_PvpClueShooter;
+        private float m_PvpClueShooterAt = float.NegativeInfinity;
+        private bool m_PvpOwnClueValid;
+        private Vector3 m_PvpOwnCluePoint;
+        private float m_PvpOwnClueAt = float.NegativeInfinity;
+        private bool m_PvpOwnClueKnown;
+
+        private bool IsPvpClueOfOther()
+        {
+            return m_PvpClueShooter != null
+                && m_PvpClueShooter != m_PvpTarget
+                && m_PvpHitFromAt == m_PvpClueShooterAt;
+        }
+
+        // Called before a round sets the clue (NoteShotDuringUnknownFight).
+        private void NotePvpClueShooter(Player shooter, float now)
+        {
+            if (shooter == m_PvpTarget)
+            {
+                m_PvpClueShooter = null;
+                m_PvpClueShooterAt = float.NegativeInfinity;
+                return;
+            }
+            if (!IsPvpClueOfOther())
+            {
+                m_PvpOwnClueValid = !float.IsNegativeInfinity(m_PvpHitFromAt);
+                m_PvpOwnCluePoint = m_PvpHitFrom;
+                m_PvpOwnClueAt = m_PvpHitFromAt;
+                m_PvpOwnClueKnown = m_PvpHitFromKnown;
+            }
+            m_PvpClueShooter = shooter;
+            m_PvpClueShooterAt = now;
+        }
+
+        // Turning to next: hit by him (seenAt null) or seen at seenAt.
+        private void GivePvpClueBack(Player next, Vector3? seenAt, float now)
+        {
+            if (!IsPvpClueOfOther() || m_PvpClueShooter != next)
+            {
+                return;
+            }
+            if (seenAt.HasValue && !IsOnShotSector(seenAt.Value, now))
+            {
+                return;
+            }
+            var old = m_PvpTarget?.channel?.owner?.playerID.characterName ?? "?";
+            if (m_PvpOwnClueValid)
+            {
+                m_PvpHitFrom = m_PvpOwnCluePoint;
+                m_PvpHitFromAt = m_PvpOwnClueAt;
+                m_PvpHitFromKnown = m_PvpOwnClueKnown;
+            }
+            else
+            {
+                m_PvpHitFromAt = float.NegativeInfinity;
+            }
+            m_PvpClueShooter = null;
+            m_PvpClueShooterAt = float.NegativeInfinity;
+            BotLog(LogLevel.Information,
+                "PvP: o tiro que eu achava ser de {Old} era de {New}; {Back}.",
+                old,
+                next.channel?.owner?.playerID.characterName ?? "?",
+                m_PvpOwnClueValid ? "lembro de " + old + " pela pista de antes" : "de " + old + " fica so onde eu vi");
+        }
+
         // The man it leaves for another: where it last knew him.
         private void RememberPvpOther(Player? old, float now)
         {
@@ -570,6 +649,11 @@ namespace SkaliaDeps
                 m_PvpHitFromKnown = false;
                 m_PvpLastHitAt = next.At;
             }
+            // 0.1.0-y17.19: the watch and the cover on where it knew him,
+            // not on the side of the one just fought (SkaliaBotShotSectorY).
+            AimShotSectorAt(next.Point, next.At, next.Seen);
+            m_PvpClueShooter = null;
+            m_PvpClueShooterAt = float.NegativeInfinity;
             BotLog(LogLevel.Information,
                 "PvP: voltando a {Name}, que eu lembrava {How} a {Meters:0}m ha {Seconds:0}s.",
                 next.Who.channel?.owner?.playerID.characterName ?? "?",

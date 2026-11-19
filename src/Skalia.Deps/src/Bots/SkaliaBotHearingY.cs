@@ -476,8 +476,8 @@ namespace SkaliaDeps
             }
             var horizontal = new Vector2(to.x, to.z).magnitude;
             var wantPitch = 90f - Mathf.Atan2(to.y, horizontal) * Mathf.Rad2Deg;
-            var step = PvpTurnDegreesPerSecond * Time.fixedDeltaTime;
-            m_HeardYaw = Mathf.MoveTowardsAngle(m_HeardYaw, DirectionToYaw(to), step);
+            // 0.1.0-y17.19: the players' hand (SkaliaBotPvpHandY).
+            StepPvpHand(ref m_HeardYaw, ref m_HeardPitch, DirectionToYaw(to), wantPitch, 0f, 0f, now);
             // The players' look was timed from the head being on him
             // (within 30 degrees); a shot at the bot is looked at that long
             // after the turn, however long the turn took.
@@ -485,7 +485,6 @@ namespace SkaliaDeps
             {
                 m_HeardLookUntil = Mathf.Max(m_HeardLookUntil, now + m_HeardLookFor);
             }
-            m_HeardPitch = Mathf.Clamp(Mathf.MoveTowardsAngle(m_HeardPitch, wantPitch, step * 0.7f), 0.5f, 179.5f);
             m_CurrentYaw = m_HeardYaw;
             m_CurrentPitch = m_HeardPitch;
             m_DesiredYaw = m_HeardYaw;

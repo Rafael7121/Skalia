@@ -94,6 +94,30 @@ namespace SkaliaDeps
             return same;
         }
 
+        // 0.1.0-y17.19: a point on the side the sector holds, as wide as
+        // a new round is taken for the same side (NoteShotSector).
+        private bool IsOnShotSector(Vector3 point, float now)
+        {
+            return IsShotSectorFresh(now)
+                && Mathf.Abs(Mathf.DeltaAngle(m_ShotSectorYaw, DirectionToYaw(point - m_ShotSectorApex)))
+                    <= ShotSectorHalfNow(now) + ShotSectorHalfDegrees;
+        }
+
+        // 0.1.0-y17.19: back to a man it remembers: the sector on where it
+        // knew him, not on the rounds of the one just fought.
+        private void AimShotSectorAt(Vector3 point, float at, bool seen)
+        {
+            var eye = m_Player.look.aim.position;
+            var to = point - eye;
+            m_ShotSectorYaw = DirectionToYaw(to);
+            m_ShotSectorMeters = Mathf.Max(5f, to.GetHorizontalMagnitude());
+            m_ShotSectorCount = 1;
+            m_ShotSectorApex = eye;
+            m_ShotSectorAt = at;
+            m_ShotSectorFromSeen = seen;
+            m_ShotSectorLastShooter = null;
+        }
+
         private bool IsShotSectorFresh(float now)
         {
             return now - m_ShotSectorAt <= PvpMemorySeconds;
@@ -284,6 +308,9 @@ namespace SkaliaDeps
             {
                 return;
             }
+            // 0.1.0-y17.19: whose round it was, and the clue it had before
+            // (SkaliaBotPvpMemoryY, GivePvpClueBack).
+            NotePvpClueShooter(shooter, now);
             m_PvpHitFrom = believed;
             m_PvpHitFromAt = now;
             m_PvpHitFromKnown = false;

@@ -216,14 +216,14 @@ namespace SkaliaDeps
         private bool m_PvpTriggerHeld;
         private float m_PvpTriggerUntil;
 
-        // The time from the hit to the turn: the drawn reaction less the
-        // time the turn itself takes at the fight's turn rate.
+        // The time from the hit to facing him: the drawn reaction.
+        // 0.1.0-y17.19: it held only the trigger; the head went to him at
+        // once through the look at where he was. Now the hand sets off so
+        // that its move ends then (SkaliaBotPvpHandY).
         private void SetPvpReactionFrom(float[] seconds, Player attacker, float now)
         {
-            var toAttacker = attacker.transform.position - m_Player.transform.position;
-            var turn = Mathf.Abs(Mathf.DeltaAngle(m_CurrentYaw, DirectionToYaw(toAttacker)));
             var react = DrawFromQuantiles(s_PvpReactQuantiles, seconds);
-            m_PvpReactAt = now + Mathf.Max(0.15f, react - turn / PvpTurnDegreesPerSecond);
+            m_PvpReactAt = StartPvpHandReactionToFace(react, now);
         }
 
         private float m_PvpStanceDrawnAt = float.NegativeInfinity;

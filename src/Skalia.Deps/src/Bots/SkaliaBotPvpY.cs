@@ -20,7 +20,6 @@ namespace SkaliaDeps
         private const float PvpLookAfterLostSeconds = 6f;
         private const float PvpMaxMeters = 250f;
         private const float PvpZombieFirstMeters = 3f;
-        private const float PvpTurnDegreesPerSecond = 420f;
         private const float PvpBodyRadius = 0.4f;
         // 0.2.2y: a second out of sight (a tree, a post, the target ducking)
         // does not end the stance: the aim stays up and only the trigger
@@ -175,6 +174,9 @@ namespace SkaliaDeps
                     {
                         m_PvpReactAt = now;
                         m_PvpFireNotBefore = now + DrawFromQuantiles(s_PvpHitSeenQuantiles, s_PvpHitSeenShotSeconds);
+                        // 0.1.0-y17.19: the hand after the players' reaction
+                        // (SkaliaBotPvpHandY).
+                        StartPvpHandReaction(now);
                         m_PvpFireNotBeforeTarget = attacker;
                         m_PvpFireNotBeforeFirm = true;
                     }
@@ -188,6 +190,9 @@ namespace SkaliaDeps
             // 0.1.0-y17.4: the one it had is not forgotten (SkaliaBotPvpMemoryY).
             if (m_PvpTarget != null && m_PvpTarget != attacker)
             {
+                // 0.1.0-y17.19: the round it heard and the one that hit it
+                // are his, not the old one's (SkaliaBotPvpMemoryY).
+                GivePvpClueBack(attacker, null, now);
                 RememberPvpOther(m_PvpTarget, now);
             }
             m_PvpTarget = attacker;
@@ -530,6 +535,9 @@ namespace SkaliaDeps
                 {
                     m_PvpReactAt = now;
                     m_PvpFireNotBefore = 0f;
+                    // 0.1.0-y17.19: the trigger at once, the hand after the
+                    // players' reaction (SkaliaBotPvpHandY).
+                    StartPvpHandReaction(now);
                 }
                 else if (!TrySetHeldAngleReaction(aimPoint, IsPvpHuntWatching(), now))
                 {
@@ -739,12 +747,14 @@ namespace SkaliaDeps
             }
             var horizontal = new Vector2(toTarget.x, toTarget.z).magnitude;
             var drawnError = m_PvpEngaged && !m_PvpMelee;
-            var wantYaw = DirectionToYaw(toTarget) + (drawnError ? m_PvpErrorYaw : 0f);
-            var wantPitch = 90f - Mathf.Atan2(toTarget.y, horizontal) * Mathf.Rad2Deg
-                + (drawnError ? m_PvpErrorPitch : 0f);
-            var step = PvpTurnDegreesPerSecond * Time.fixedDeltaTime;
-            m_PvpYaw = Mathf.MoveTowardsAngle(m_PvpYaw, wantYaw, step);
-            m_PvpPitch = Mathf.Clamp(Mathf.MoveTowardsAngle(m_PvpPitch, wantPitch, step * 0.7f), 0.5f, 179.5f);
+            // 0.1.0-y17.19: the players' hand, not a fixed turn rate
+            // (SkaliaBotPvpHandY).
+            StepPvpHand(ref m_PvpYaw, ref m_PvpPitch,
+                DirectionToYaw(toTarget),
+                90f - Mathf.Atan2(toTarget.y, horizontal) * Mathf.Rad2Deg,
+                drawnError ? m_PvpErrorYaw : 0f,
+                drawnError ? m_PvpErrorPitch : 0f,
+                now);
             m_CurrentYaw = m_PvpYaw;
             m_CurrentPitch = m_PvpPitch;
             m_DesiredYaw = m_PvpYaw;

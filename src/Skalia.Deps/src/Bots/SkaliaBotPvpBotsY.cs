@@ -404,6 +404,10 @@ namespace SkaliaDeps
                     m_PvpTarget.channel?.owner?.playerID.characterName ?? "?",
                     best.channel!.owner!.playerID.characterName,
                     bestDistance);
+                // 0.1.0-y17.19: the shots it put on the old one, if they
+                // came from where this one is seen, were this one's
+                // (SkaliaBotPvpMemoryY).
+                GivePvpClueBack(best, bestPoint, now);
                 // 0.1.0-y17.4: not forgotten (SkaliaBotPvpMemoryY).
                 RememberPvpOther(m_PvpTarget, now);
                 ResetPvpHunt();
@@ -413,6 +417,9 @@ namespace SkaliaDeps
             m_PvpAware = true;
             m_PvpAwareSince = now;
             m_PvpReactAt = now;
+            // 0.1.0-y17.19: the trigger waits the drawn time, the hand the
+            // players' reaction (SkaliaBotPvpHandY).
+            StartPvpHandReaction(now);
             m_PvpEngaged = false;
             m_PvpLooking = false;
             m_PvpLastSeenAt = now;
