@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+/SKALIA.exe
+/SKALIA.exe.config
+/SKALIA.new.exe
+/SKALIA.old.exe
+skalia.json
