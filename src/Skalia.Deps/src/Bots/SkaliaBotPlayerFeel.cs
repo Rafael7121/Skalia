@@ -371,9 +371,33 @@ namespace SkaliaDeps
             return SteerLadderSlideDown(ladder, position, now, climbing);
         }
 
+        // 0.1.0-y17.21 (the tester, 20/11: "ele bugando antes de subir a escada
+        // na ponte"). The recordings of 17-19/11 at the foot of the three
+        // ladders the bots use most (the two of the bridge, -289,100 and
+        // -270,121, and 675,941): 20 of 25 descents that reached the foot
+        // were on the ladder again within 2s, 5 of them back up to 42-47m
+        // (LilJuninho, 19/11 01:00:16-01:03:12, four times in 3 minutes,
+        // once 20s hung at 41m). The game takes a standing body whose waist
+        // ray hits a ladder within 0.75m, no key needed
+        // (PlayerStance.simulate), and the descent ended with the bot facing
+        // it: the catch of the drop turned it there on landing, and the
+        // slide ends holding it. A player at the foot turns and walks off
+        // (SteerLadderSlideDown); so does the bot now, at once.
+        private void TurnOffLadderFoot(BotLadder? ladder, Vector3 position)
+        {
+            if (ladder == null
+                || (ladder.Bottom - position).GetHorizontalMagnitude() > 1.5f
+                || Mathf.Abs(ladder.Bottom.y - position.y) > 1.5f)
+            {
+                return;
+            }
+            SetLadderYawNow(ladder.FacingYaw + 180f, 90f);
+        }
+
         private void FinishLadderDescent(Vector3 position, float now, string? problem)
         {
             var ladder = m_Ladder;
+            TurnOffLadderFoot(ladder, position);
             BotLog(LogLevel.Information,
                 "Bot desceu a escada {Name} em {Seconds:0.#}s com {Drops} queda(s) curta(s) sem querer e {Dropped} queda(s) de proposito{Problem}; vida {Health}; agora em {Position}.",
                 ladder?.Name ?? "?",

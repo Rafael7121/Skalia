@@ -348,7 +348,7 @@ namespace SkaliaDeps
             // him, walked to with the face on the steps.
             var oldEye = m_PvpHitFromAt > m_PvpLastSeenAt ? m_PvpHitFrom : m_PvpLastSeenPoint + Vector3.up * 0.3f;
             var hasSide = !float.IsNegativeInfinity(lastKnown)
-                && IsChestInLineFrom(oldEye, position)
+                && IsChestInHisLine(oldEye, position)
                 && TryFindPvpWatchCover(position, oldEye, out m_PvpSecondSideSpot, out _, PvpFightCoverMeters, true);
             RememberPvpOther(target, now);
             ResetPvpHunt();
@@ -797,7 +797,9 @@ namespace SkaliaDeps
                 if (now - last <= PvpActiveSeconds)
                 {
                     var eye = m_PvpHitFromAt > m_PvpLastSeenAt ? m_PvpHitFrom : m_PvpLastSeenPoint + Vector3.up * 0.3f;
-                    if (IsChestInLineFrom(eye, ground))
+                    // 0.1.0-y17.21: his line as the watch's cover takes it
+                    // (SkaliaBotPvpCoverY), not one ray.
+                    if (IsChestInHisLine(eye, ground))
                     {
                         who = target.channel?.owner?.playerID.characterName ?? "?";
                         return true;
@@ -810,7 +812,7 @@ namespace SkaliaDeps
             // 14 health on the way to the Cobra. The one it just left is
             // still the fight.
             if (IsPvpLeftRecently(now) && now - m_PvpLastSeenAt <= PvpActiveSeconds
-                && IsChestInLineFrom(m_PvpLastSeenPoint + Vector3.up * 0.3f, ground))
+                && IsChestInHisLine(m_PvpLastSeenPoint, ground))
             {
                 who = "quem deixei para tras";
                 return true;
@@ -822,7 +824,7 @@ namespace SkaliaDeps
                     continue;
                 }
                 var eye = other.Seen ? other.Point + Vector3.up * 0.3f : other.Point;
-                if (IsChestInLineFrom(eye, ground))
+                if (IsChestInHisLine(eye, ground))
                 {
                     who = other.Who.channel?.owner?.playerID.characterName ?? "?";
                     return true;

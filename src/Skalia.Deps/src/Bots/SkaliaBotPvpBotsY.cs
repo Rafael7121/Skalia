@@ -65,7 +65,11 @@ namespace SkaliaDeps
         private float m_NextPvpOpenScanAt;
 
         // ---- sight ----
-        private static readonly int s_PvpSightMask = RayMasks.BLOCK_COLLISION | RayMasks.SMALL;
+        // 0.1.0-y17.21: not the CLIP layer, the game's invisible walls: a
+        // man sees through them and the rounds go through (the gun's ray is
+        // RayMasks.DAMAGE_CLIENT, the server's check DAMAGE_SERVER, neither
+        // has CLIP); they hid men from the bot and counted as its cover.
+        private static readonly int s_PvpSightMask = (RayMasks.BLOCK_COLLISION | RayMasks.SMALL) & ~RayMasks.CLIP;
         private const float BushCellMeters = 8f;
         // Fallback size of a bush when its model gives none: an estimate,
         // the game files carry no size for them.

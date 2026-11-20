@@ -100,7 +100,7 @@ namespace SkaliaDeps
             m_PvpLookCoverNextAt = now + PvpLookCoverEverySeconds;
             var point = m_PvpLastSeenPoint;
             var meters = (point - position).GetHorizontalMagnitude();
-            if (meters < 4f || meters > PvpHoldAngleMeters || !IsChestInLineFrom(point, position))
+            if (meters < 4f || meters > PvpHoldAngleMeters || !IsChestInHisLine(point, position))
             {
                 return false;
             }

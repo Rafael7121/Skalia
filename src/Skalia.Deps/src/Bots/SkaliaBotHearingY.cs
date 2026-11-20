@@ -382,7 +382,8 @@ namespace SkaliaDeps
                         }
                     }
                     tried++;
-                    if (IsChestInLineFrom(ground + Vector3.up * 1.6f, feet))
+                    // 0.1.0-y17.21: the same test as the watch's cover.
+                    if (IsChestSeenFrom(ground + Vector3.up * PvpStandEyeHeight, feet))
                     {
                         open++;
                     }

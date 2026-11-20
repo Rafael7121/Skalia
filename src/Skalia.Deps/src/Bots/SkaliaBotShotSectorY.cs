@@ -136,7 +136,7 @@ namespace SkaliaDeps
             var direction = Quaternion.Euler(0f, m_ShotSectorYaw + offsetDegrees, 0f) * Vector3.forward;
             var point = m_ShotSectorApex + direction * m_ShotSectorMeters;
             // Not under a hill: a man stands on the ground at least.
-            point.y = Mathf.Max(point.y, LevelGround.getHeight(point) + 1.6f);
+            point.y = Mathf.Max(point.y, LevelGround.getHeight(point) + PvpStandEyeHeight);
             return point;
         }
 

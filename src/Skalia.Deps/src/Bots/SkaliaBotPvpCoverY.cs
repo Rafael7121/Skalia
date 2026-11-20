@@ -45,11 +45,6 @@ namespace SkaliaDeps
         private bool m_PvpHuntCoverDone;
         private float m_PvpPrefireLogAt = float.NegativeInfinity;
 
-        private bool IsChestInLineFrom(Vector3 eye, Vector3 ground)
-        {
-            return !Physics.Linecast(eye, ground + Vector3.up * 1.3f, s_PvpSightMask, QueryTriggerInteraction.Ignore);
-        }
-
         // 0.1.0-y17.15 (test of 18/11, 23:24:37-23:25:09): blazex lost
         // the tester at 33m, prone beside a pine (the bot's eye had been blocked
         // by Pine_1 at 32.2m, a metre from him), and stood 24s in the open
@@ -75,9 +70,54 @@ namespace SkaliaDeps
         private const float PvpOwnCoverShare = 0.1f;
         private const float PvpOwnCoverMinMeters = 2f;
 
+        // 0.1.0-y17.21 (the tester, 20/11: "busque no codigo inconsistencias
+        // ... de busca de cobertura"). Hidden was one ray at the middle of
+        // the chest: a lamp post, a fence slat or a thin trunk on it hid the
+        // whole body. The body is 0.8m across (PvpBodyRadius); the chest is
+        // hidden only with its middle and both sides hidden.
+        private const float PvpChestHeight = 1.3f;
+        private const float PvpChestHalfWidth = 0.3f;
+        // The eye of a man standing (PlayerLook.HEIGHT_LOOK_STAND).
+        private const float PvpStandEyeHeight = 1.75f;
+
         private bool IsChestSeenFrom(Vector3 eye, Vector3 ground)
         {
-            var chest = ground + Vector3.up * 1.3f;
+            return IsBodySeenFrom(eye, ground, PvpChestHeight);
+        }
+
+        private bool IsBodySeenFrom(Vector3 eye, Vector3 ground, float height)
+        {
+            var middle = ground + Vector3.up * height;
+            if (IsPointSeenFrom(eye, middle))
+            {
+                return true;
+            }
+            var flat = eye - middle;
+            flat.y = 0f;
+            if (flat.sqrMagnitude < 0.01f)
+            {
+                return false;
+            }
+            var side = Vector3.Cross(Vector3.up, flat.normalized) * PvpChestHalfWidth;
+            return IsPointSeenFrom(eye, middle + side) || IsPointSeenFrom(eye, middle - side);
+        }
+
+        // 0.1.0-y17.21: where he was seen is his chest, his head or his
+        // hips (TryGetPvpVisiblePoint), down to 0.3m over the ground when he
+        // lay; a bank that hides the bot from there does not from his eyes
+        // when he gets up. The line is taken from his standing eye.
+        private static Vector3 PvpStandingEyeAt(Vector3 point)
+        {
+            if (Physics.Raycast(point + Vector3.up * 0.5f, Vector3.down, out var floor, 3f,
+                    RayMasks.BLOCK_COLLISION, QueryTriggerInteraction.Ignore))
+            {
+                point.y = Mathf.Max(point.y, floor.point.y + PvpStandEyeHeight);
+            }
+            return point;
+        }
+
+        private bool IsPointSeenFrom(Vector3 eye, Vector3 chest)
+        {
             var to = eye - chest;
             var length = to.magnitude;
             if (length < 0.1f)
@@ -108,14 +148,19 @@ namespace SkaliaDeps
 
         private bool IsChestExposedToHim(Vector3 point, Vector3 ground, float now)
         {
+            return IsBodyExposedToHim(point, ground, PvpChestHeight, now);
+        }
+
+        private bool IsBodyExposedToHim(Vector3 point, Vector3 ground, float height, float now)
+        {
             if (!IsPvpWatchOnSound(now))
             {
-                return IsChestInHisLine(point, ground);
+                return IsBodyInHisLine(point, ground, height);
             }
             var half = ShotSectorHalfNow(now);
             for (var i = 0; i < 5; i++)
             {
-                if (IsChestSeenFrom(ShotSectorPoint(Mathf.Lerp(-half, half, i / 4f)), ground))
+                if (IsBodySeenFrom(ShotSectorPoint(Mathf.Lerp(-half, half, i / 4f)), ground, height))
                 {
                     return true;
                 }
@@ -125,7 +170,13 @@ namespace SkaliaDeps
 
         private bool IsChestInHisLine(Vector3 eye, Vector3 ground)
         {
-            if (IsChestSeenFrom(eye, ground))
+            return IsBodyInHisLine(eye, ground, PvpChestHeight);
+        }
+
+        private bool IsBodyInHisLine(Vector3 eye, Vector3 ground, float height)
+        {
+            eye = PvpStandingEyeAt(eye);
+            if (IsBodySeenFrom(eye, ground, height))
             {
                 return true;
             }
@@ -139,7 +190,7 @@ namespace SkaliaDeps
             foreach (var offset in new[] { side, -side })
             {
                 if (!Physics.Linecast(eye, eye + offset, s_PvpSightMask, QueryTriggerInteraction.Ignore)
-                    && IsChestSeenFrom(eye + offset, ground))
+                    && IsBodySeenFrom(eye + offset, ground, height))
                 {
                     return true;
                 }
@@ -282,6 +333,16 @@ namespace SkaliaDeps
             var from = m_PvpWayInActive ? m_PvpWatchFrom : m_PvpHuntPoint;
             if (!IsChestExposedToHim(from, here, now))
             {
+                // 0.1.0-y17.21: the cover was found for the chest (1.3m)
+                // and the watch stands 2 times in 4 (SkaliaBotPvpHuntY); a
+                // stood man's head is at 1.75m, over a wall that hides his
+                // chest. With the head in his line, crouched (the eye at
+                // 1.2m, under the chest) as the third of the watches.
+                if (m_PvpHuntPosture == 0 && IsBodyExposedToHim(from, here, PvpStandEyeHeight, now))
+                {
+                    m_PvpHuntPosture = 1;
+                    BotLog(LogLevel.Information, "PvP: na vigia a cabeca em pe fica acima da cobertura; agachando.");
+                }
                 return false;
             }
             if (m_PvpWatchCoverMoves < PvpWatchCoverMovesMax)

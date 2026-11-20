@@ -325,6 +325,16 @@ namespace SkaliaDeps
                 m_IsWalking = false;
                 return true;
             }
+            // 0.1.0-y17.21: landed. Facing the ladder on the ground within
+            // 0.75m is a grab for the game (PlayerStance.simulate takes a
+            // standing body whose waist ray hits it, no key needed): the
+            // catch below turned the bot to it at the foot and the game put
+            // it back on the ladder (SkaliaBotPlayerFeel, FinishLadderDescent).
+            if (m_Player.movement.isGrounded)
+            {
+                m_LadderDropping = false;
+                return false;
+            }
             // Catch: face it now; the game takes it in the air.
             m_LadderDropping = false;
             m_LadderDropNextAt = now + 0.2f;

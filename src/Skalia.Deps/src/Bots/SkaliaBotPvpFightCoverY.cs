@@ -70,7 +70,10 @@ namespace SkaliaDeps
             m_PvpReloadCoverNextAt = now + 3f;
             var position = m_Player.transform.position;
             var hisEye = m_PvpVisible ? target.look.aim.position : m_PvpLastSeenPoint;
-            if (!IsChestInLineFrom(hisEye, position))
+            // 0.1.0-y17.21: in his line by the same test the cover is
+            // looked for with (SkaliaBotPvpCoverY); one bare line called a
+            // tree beside him the bot's cover and it reloaded in the open.
+            if (!IsChestInHisLine(hisEye, position))
             {
                 return false;
             }
@@ -173,7 +176,7 @@ namespace SkaliaDeps
             }
             m_PvpFightCoverNextAt = now + PvpFightCoverEverySeconds;
             var hisEye = target.look.aim.position;
-            if (!IsChestInLineFrom(hisEye, position)
+            if (!IsChestInHisLine(hisEye, position)
                 || !TryFindPvpWatchCover(position, hisEye, out var spot, out var peek, PvpFightCoverMeters, true))
             {
                 return false;
