@@ -55,6 +55,31 @@ namespace SkaliaDeps
         private static readonly float[] s_PvpOnsetQuantiles = { 0f, 0.25f, 0.5f, 0.75f, 1f };
         private static readonly float[] s_PvpOnsetSeconds = { 0.18f, 0.19f, 0.57f, 0.85f, 1.15f };
 
+        // 0.1.0-y17.20 (the tester, 19/11, the follow-up to the above): on him,
+        // the y17.19 aim still followed a man on the move with no delay.
+        // Players of 08/11 (rec/track1.py, 1246 rows of their fights with
+        // the gun within 15 degrees of him), the aim along his move (+ =
+        // behind him), by how fast he crossed their view:
+        // - 2-5 degrees a second: +0.8 (median), behind in 60% of the rows
+        // - 5-10: +3.9, behind in 73%
+        // - 10-20: +6.3, behind in 81%
+        // - 20-40: +2.4 (11 rows: past that a new move onto him)
+        // The bots of 17-19/11 (rec2/bottrack.py, 6246 rows): +0.4 at
+        // 5-10, +1.0 at 10-20. Per pair of players, the delay (aim behind
+        // over his speed): -0.54, -0.41, 0.19, 0.33, 0.34, 0.54, 0.57, 0.72,
+        // 0.98, 1.07s; the two below 0 led him, which the bot's own lead
+        // for the round's flight (GetPvpSteerPoint) already does, so they
+        // count as 0. The aim follows him through that delay, drawn for
+        // each move onto him, and never more than PvpFlickDegrees behind:
+        // past that the players moved onto him again.
+        private static readonly float[] s_PvpTrackLagQuantiles = { 0f, 0.2f, 0.5f, 0.75f, 1f };
+        private static readonly float[] s_PvpTrackLagSeconds = { 0f, 0f, 0.44f, 0.68f, 1.07f };
+        private float m_PvpHandLag;
+        private float m_PvpHandRawYaw;
+        private float m_PvpHandRawPitch;
+        private float m_PvpHandSeenYaw;
+        private float m_PvpHandSeenPitch;
+
         // Past this off him it is a move onto him, within it a correction:
         // the players' error at the first shot, p90 7.45 degrees
         // (rec/aim1.py, 37 fights).
@@ -105,7 +130,30 @@ namespace SkaliaDeps
         private void StepPvpHand(ref float yaw, ref float pitch, float pointYaw, float pointPitch,
             float wantYaw, float wantPitch, float now)
         {
-            if (now - m_PvpHandDrivenAt > PvpHandIdleSeconds)
+            var dt = now - m_PvpHandDrivenAt;
+            var fresh = dt > PvpHandIdleSeconds;
+            // 0.1.0-y17.20: where the hand thinks he is, his move seen late.
+            if (fresh
+                || m_PvpHandLag <= 0f
+                || Mathf.Abs(Mathf.DeltaAngle(m_PvpHandRawYaw, pointYaw)) > PvpFlickDegrees
+                || Mathf.Abs(m_PvpHandRawPitch - pointPitch) > PvpFlickDegrees)
+            {
+                m_PvpHandSeenYaw = pointYaw;
+                m_PvpHandSeenPitch = pointPitch;
+            }
+            else
+            {
+                var k = 1f - Mathf.Exp(-Mathf.Max(0f, dt) / m_PvpHandLag);
+                m_PvpHandSeenYaw += Mathf.DeltaAngle(m_PvpHandSeenYaw, pointYaw) * k;
+                m_PvpHandSeenPitch += (pointPitch - m_PvpHandSeenPitch) * k;
+                m_PvpHandSeenYaw = pointYaw + Mathf.Clamp(Mathf.DeltaAngle(pointYaw, m_PvpHandSeenYaw), -PvpFlickDegrees, PvpFlickDegrees);
+                m_PvpHandSeenPitch = pointPitch + Mathf.Clamp(m_PvpHandSeenPitch - pointPitch, -PvpFlickDegrees, PvpFlickDegrees);
+            }
+            m_PvpHandRawYaw = pointYaw;
+            m_PvpHandRawPitch = pointPitch;
+            pointYaw = m_PvpHandSeenYaw;
+            pointPitch = m_PvpHandSeenPitch;
+            if (fresh)
             {
                 m_PvpHandMoving = false;
                 m_PvpHandLastOffYaw = Mathf.DeltaAngle(pointYaw, yaw);
@@ -153,6 +201,7 @@ namespace SkaliaDeps
                         ? m_PvpHandNextFlick
                         : DrawFromQuantiles(s_PvpHandQuantiles, s_PvpFlickSeconds);
                     m_PvpHandNextFlick = 0f;
+                    m_PvpHandLag = DrawFromQuantiles(s_PvpTrackLagQuantiles, s_PvpTrackLagSeconds);
                     var land = DrawFromQuantiles(s_PvpHandQuantiles, s_PvpFlickLandShare);
                     m_PvpHandToYaw = offYaw + gapYaw * (1f - land);
                     m_PvpHandToPitch = offPitch + gapPitch * (1f - land);
