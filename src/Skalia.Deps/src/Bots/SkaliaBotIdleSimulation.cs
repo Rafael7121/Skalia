@@ -2677,6 +2677,8 @@ namespace SkaliaDeps
             {
                 keys |= m_Player.input.flags[5];
             }
+            // 0.1.0-y17.27: a fight's sprint hops like the players' (SkaliaBotMoveFeelY).
+            TickPvpRunHops(m_IsSprinting && !staminaRecovering);
             var swimming = m_Player.stance.stance == EPlayerStance.SWIM;
             var climbingOut = swimming
                 && m_ObjectiveType == ObjectiveType.ExitWater
@@ -14129,7 +14131,13 @@ namespace SkaliaDeps
 
         private bool ShouldSprintWhileTraveling()
         {
-            if (m_ObjectiveType != ObjectiveType.Travel && m_ObjectiveType != ObjectiveType.Explore)
+            // 0.1.0-y17.27: the search of an area too, under the open sky
+            // (the players sprinted 59-71% of the time moving outdoors; the
+            // bots searching an area 1%, SkaliaBotMoveFeelY).
+            if (m_ObjectiveType != ObjectiveType.Travel
+                && m_ObjectiveType != ObjectiveType.Explore
+                && !(m_ObjectiveType == ObjectiveType.Patrol
+                     && IsOpenSkyCached(m_Player.transform.position, Time.realtimeSinceStartup)))
             {
                 return false;
             }

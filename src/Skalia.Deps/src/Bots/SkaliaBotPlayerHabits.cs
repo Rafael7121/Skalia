@@ -22,13 +22,14 @@ namespace SkaliaDeps
     // bot: never chased, fighting, fleeing, in the water, on a ladder or
     // with the risk high (SkaliaBotRisk). serverBot:behavior:playerPosture
     // and playerHabits switch the two halves off.
+    // 0.1.0-y17.27: the bursts, the walk between them and the looks on the
+    // way are measured again, bots against players (SkaliaBotMoveFeelY).
     internal sealed partial class SkaliaBotIdleSimulation
     {
         private const float HabitCalmAggroMeters = 25f;
         private const float HabitCalmZombieMeters = 10f;
         private const float HabitGlanceRouteMeters = 6f;
         private const float HabitPauseRouteMeters = 3f;
-        private const float HabitLongRunMeters = 15f;
         private const float HabitHopStamina = 40f;
         private const float LootProneReachMeters = 1.6f;
         private const float LootProneHeightMeters = 0.4f;
@@ -312,19 +313,21 @@ namespace SkaliaDeps
                 }
                 else if (m_HabitSprintUntil <= 0f)
                 {
-                    m_HabitSprintUntil = now + DrawSprintBurst(navigationDistance, night);
+                    // 0.1.0-y17.27: the players' sprints and the walk between
+                    // them, day and night (SkaliaBotMoveFeelY).
+                    m_HabitSprintUntil = now + DrawPlayersSprintRun();
                 }
                 else if (now >= m_HabitSprintUntil)
                 {
                     m_HabitSprintUntil = 0f;
-                    m_HabitRestUntil = now + (night ? Random.Range(2f, 4f) : Random.Range(1.2f, 2.8f));
+                    m_HabitRestUntil = now + DrawPlayersWalkBetweenSprints();
                     m_IsSprinting = false;
                 }
             }
 
             // A glance to a side; the feet keep to the way (walking sideways,
-            // see UpdateNavigationAnalog). Sprinting, only as far as the run
-            // still goes forward or diagonally forward.
+            // see UpdateNavigationAnalog). 0.1.0-y17.27: sprinting too, as far
+            // as the players looked (the sprint takes any direction).
             var wantsGlance = now < m_HabitGlanceUntil || now >= m_HabitNextGlanceAt;
             if (wantsGlance && now >= m_HabitSidesCheckAt)
             {
@@ -338,10 +341,7 @@ namespace SkaliaDeps
             {
                 if (roomForGlance)
                 {
-                    var offset = m_IsSprinting
-                        ? Mathf.Clamp(m_HabitGlanceOffset, -40f, 40f)
-                        : m_HabitGlanceOffset;
-                    m_DesiredYaw = routeYaw + offset;
+                    m_DesiredYaw = routeYaw + m_HabitGlanceOffset;
                 }
                 else
                 {
@@ -350,12 +350,15 @@ namespace SkaliaDeps
             }
             else if (now >= m_HabitNextGlanceAt && !rushing)
             {
-                m_HabitNextGlanceAt = now + Random.Range(3f, 8f);
+                // 0.1.0-y17.27: the players' looks, how often, how far and
+                // how long, sprinting or walking (SkaliaBotMoveFeelY).
+                m_HabitNextGlanceAt = now + NextMoveLookGap(m_IsSprinting);
                 if (roomForGlance && !HasRoofOverBot(position))
                 {
                     var side = Random.value < 0.5f ? -1f : 1f;
-                    m_HabitGlanceOffset = side * (m_IsSprinting ? Random.Range(20f, 40f) : Random.Range(40f, 100f));
-                    m_HabitGlanceUntil = now + Random.Range(1f, 3f);
+                    var degrees = DrawMoveLookDegrees(m_IsSprinting);
+                    m_HabitGlanceOffset = side * degrees;
+                    m_HabitGlanceUntil = now + DrawMoveLookSeconds(m_IsSprinting, degrees);
                 }
             }
 
@@ -388,23 +391,6 @@ namespace SkaliaDeps
         {
             return m_Player.stance.stance == EPlayerStance.SWIM
                 || m_Player.stance.stance == EPlayerStance.CLIMB;
-        }
-
-        // The players' bursts: half under 1.5s, 9 in 10 under 7-11s. A long
-        // straight way gets the longer ones.
-        private static float DrawSprintBurst(float navigationDistance, bool night)
-        {
-            float seconds;
-            var roll = Random.value;
-            if (navigationDistance >= HabitLongRunMeters)
-            {
-                seconds = roll < 0.4f ? Random.Range(1.5f, 3.5f) : Random.Range(3.5f, 10f);
-            }
-            else
-            {
-                seconds = roll < 0.6f ? Random.Range(0.8f, 2.5f) : roll < 0.9f ? Random.Range(2.5f, 6f) : Random.Range(6f, 10f);
-            }
-            return night ? seconds * 0.7f : seconds;
         }
 
         private static bool HasRoofOverBot(Vector3 position)
