@@ -7486,6 +7486,24 @@ namespace SkaliaDeps
                     BlacklistCurrentExplorationDestination(now, reason);
                     m_HasInterestArea = false;
                 }
+                // 0.1.0-y17.22 (the tester, 20/11: "bugando a movimentacao
+                // dele as vezes"). Only the area and the item were given up
+                // here: a trip stayed active (ClearObjective leaves
+                // m_TravelActive), so the next pick (ChooseExplorationObjective)
+                // resumed it and planned the same way back to the same block,
+                // and a patrol picked the same loot point again. As the third
+                // swim at one bank does (NoteWaterExit): the trip fails and
+                // the point is skipped.
+                else if (previousType == ObjectiveType.Travel && m_TravelActive)
+                {
+                    FailTerrainTravel(now, reason);
+                }
+                else if (previousType == ObjectiveType.Patrol
+                         && m_PatrolTargetSet
+                         && (m_PatrolTargetPoint - previousPosition).sqrMagnitude < 0.01f)
+                {
+                    NotePatrolPointFailed(m_PatrolTargetPoint, now, reason, true);
+                }
             }
 
             if (succeeded && CanResumeSuspendedObjective(previousType))
