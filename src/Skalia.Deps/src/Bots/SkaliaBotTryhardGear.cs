@@ -592,9 +592,36 @@ namespace SkaliaDeps
             {
                 return true;
             }
+            // 0.1.0-y17.24 (the tester, 20/11, on the drum: "nao precisa ser
+            // obrigatorio, mas seria interessante se eles usassem tbm"): at
+            // the cap a magazine still comes when it holds more rounds than
+            // any carried one can (a drum over full magazines); the reload
+            // already takes the fullest one.
+            if (rounds > LargestCarriedMagazineCapacity(magazine))
+            {
+                return true;
+            }
             EnsurePourRecipes();
             return s_SelfPourBlueprints!.ContainsKey(magazine.id)
                 && rounds <= GetFreeRounds(magazine.id, magazine.amount, out _);
+        }
+
+        private int LargestCarriedMagazineCapacity(ItemMagazineAsset magazine)
+        {
+            var largest = 0;
+            for (byte page = 0; page < PlayerInventory.STORAGE; page++)
+            {
+                var itemCount = m_Player.inventory.getItemCount(page);
+                for (byte index = 0; index < itemCount; index++)
+                {
+                    if (m_Player.inventory.getItem(page, index)?.GetAsset() is ItemMagazineAsset carried
+                        && SharesCaliber(carried.calibers, magazine.calibers))
+                    {
+                        largest = Mathf.Max(largest, carried.amount);
+                    }
+                }
+            }
+            return largest;
         }
 
         private bool WantsAmmoBox(ItemAsset box, int rounds, out string why)

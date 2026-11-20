@@ -374,6 +374,17 @@ namespace SkaliaDeps
         private bool IsTryhardEquipped(out string lacks)
         {
             lacks = string.Empty;
+            // 0.1.0-y17.24 (the tester, 20/11: "no modo arena ele so tem que
+            // pegar qualquer arma que aparecer e matar").
+            if (IsArenaMap)
+            {
+                if (TryGetKeeperGun(out _, out _, out _))
+                {
+                    return true;
+                }
+                lacks = "qualquer arma (arena)";
+                return false;
+            }
             if (!TryGetKeeperGun(out _, out _, out var gun)
                 || GunScore(gun) < MegaGunScore * StrongGunShare)
             {
@@ -404,8 +415,9 @@ namespace SkaliaDeps
                 lacks = "curativo";
                 return false;
             }
-            // 0.1.0-y17.23: and the worn gear (SkaliaBotFullLootY).
-            return HasFullLootGear(out lacks);
+            // 0.1.0-y17.24: and the top of the map, gun and worn gear
+            // (SkaliaBotFullLootY).
+            return HasMapTopGear(gun, out lacks);
         }
 
         // 0.2.2v (doc 13.3, item 7): when nothing of the tryhard is reachable
