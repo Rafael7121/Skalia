@@ -404,7 +404,8 @@ namespace SkaliaDeps
                 lacks = "curativo";
                 return false;
             }
-            return true;
+            // 0.1.0-y17.23: and the worn gear (SkaliaBotFullLootY).
+            return HasFullLootGear(out lacks);
         }
 
         // 0.2.2v (doc 13.3, item 7): when nothing of the tryhard is reachable
