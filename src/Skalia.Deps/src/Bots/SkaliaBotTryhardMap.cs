@@ -484,6 +484,13 @@ namespace SkaliaDeps
                 }
                 return false;
             }
+            // 0.1.0-y17.26: a key door met on the way comes first: its key,
+            // then the door (SkaliaBotKeysY).
+            if (TryPickKeyDestination(position, now, originNode, ref chosen, ref chosenKey,
+                    ref candidateCount, ref blacklistedCount, ref missingNodeCount, ref disconnectedCount))
+            {
+                return true;
+            }
             var equipped = IsTryhardEquipped(out var lacks);
             if (equipped && now < m_HuntBoredUntil)
             {

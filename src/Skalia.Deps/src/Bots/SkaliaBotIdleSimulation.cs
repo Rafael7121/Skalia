@@ -14764,6 +14764,12 @@ namespace SkaliaDeps
             byte amount = 1,
             byte quality = 100)
         {
+            // 0.1.0-y17.26: a key some door of the map asks for, one of each
+            // (SkaliaBotKeysY).
+            if (IsMapKeyItem(asset.id))
+            {
+                return CountCarried(asset.id) == 0 && HasInventorySpaceFor(asset);
+            }
             if (asset is ItemMeleeAsset uselessMelee && !IsUsefulMelee(uselessMelee))
             {
                 return false;
@@ -14894,6 +14900,11 @@ namespace SkaliaDeps
                 case EItemType.SHIRT:
                 case EItemType.PANTS:
                     if (GetWornBagId(asset.type) == 0)
+                    {
+                        return true;
+                    }
+                    // 0.1.0-y17.26: one radiation suit in the bag.
+                    if (WantsSuitLoot(asset))
                     {
                         return true;
                     }
@@ -16470,6 +16481,8 @@ namespace SkaliaDeps
                 return;
             }
             m_NextBagTidyAt = now + (Tryhard ? 0.5f : 1.5f);
+            // 0.1.0-y17.26: the radiation suit (SkaliaBotRadiationY).
+            var suitUp = IsSuitUpWanted();
             for (byte page = 0; page < PlayerInventory.STORAGE; page++)
             {
                 var itemCount = m_Player.inventory.getItemCount(page);
@@ -16485,10 +16498,16 @@ namespace SkaliaDeps
                     }
                     var wornId = GetWornBagId(asset.type);
                     var isClothes = asset.type == EItemType.SHIRT || asset.type == EItemType.PANTS;
+                    var suitDecision = isClothes ? GetSuitWearDecision(asset, wornId, suitUp) : 0;
+                    if (suitDecision < 0)
+                    {
+                        continue;
+                    }
+                    var forceSuit = suitDecision > 0;
                     // 0.2.2t: by protection first (IsBetterBagOrArmor), and a
                     // bot with no shirt or pants puts one on again: the spare
                     // clothes are the bandages now, not the ones it wears.
-                    if (IsBetterBagOrArmor(asset, wornId) || (wornId == 0 && isClothes))
+                    if (forceSuit || IsBetterBagOrArmor(asset, wornId) || (wornId == 0 && isClothes))
                     {
                         // 0.2.2x11: a repack that failed is tried again in 30s.
                         if (m_WearRepackFailedUntil.TryGetValue(asset.id, out var repackRetry) && now < repackRetry)
@@ -16516,8 +16535,9 @@ namespace SkaliaDeps
                                 jar = newJar;
                             }
                             else if (repack == WearRepack.Later
-                                     || !(asset is ItemClothingAsset newGear && worn is ItemClothingAsset oldGear
-                                          && newGear.armor < oldGear.armor - 0.04f))
+                                     || (!forceSuit
+                                         && !(asset is ItemClothingAsset newGear && worn is ItemClothingAsset oldGear
+                                              && newGear.armor < oldGear.armor - 0.04f)))
                             {
                                 continue;
                             }
@@ -19628,10 +19648,21 @@ namespace SkaliaDeps
             var brushing = !wanted
                 && (SkaliaBotUnityNavmesh.IsRealDoor(door.State) || IsWalkInContainer(door))
                 && IsTouchingLeaf(door, position);
-            if ((!wanted && !brushing) || !CanReachToOpen(door) || !SkaliaBotStructureMap.Open(door))
+            if ((!wanted && !brushing) || !CanReachToOpen(door))
             {
                 return;
             }
+            if (!door.CanOpen(m_Player))
+            {
+                // 0.1.0-y17.26: a key door (SkaliaBotKeysY).
+                NoteLockedDoor(door, now);
+                return;
+            }
+            if (!SkaliaBotStructureMap.Open(door, m_Player))
+            {
+                return;
+            }
+            NoteDoorOpened(door);
             BotLog(LogLevel.Information,
                 "Abriu {Name} em {Position}.",
                 door.Name,
@@ -19869,6 +19900,13 @@ namespace SkaliaDeps
             {
                 return false;
             }
+            if (!door.CanOpen(m_Player))
+            {
+                // 0.1.0-y17.26: no key for it; the key becomes a goal
+                // (SkaliaBotKeysY) and the item behind it waits.
+                NoteLockedDoor(door, now);
+                return false;
+            }
             GraphNode? origin = null;
             var forward = door.Transform.forward;
             var right = door.Transform.right;
@@ -19926,8 +19964,18 @@ namespace SkaliaDeps
                 return;
             }
             if ((door.UsePoint - position).GetHorizontalMagnitude() <= 2.5f
-                && SkaliaBotStructureMap.Open(door))
+                && !door.CanOpen(m_Player))
             {
+                NoteLockedDoor(door, now);
+                m_DoorApproachDoor = null;
+                ClearObjective();
+                m_NextLootScanTime = now + 0.5f;
+                return;
+            }
+            if ((door.UsePoint - position).GetHorizontalMagnitude() <= 2.5f
+                && SkaliaBotStructureMap.Open(door, m_Player))
+            {
+                NoteDoorOpened(door);
                 BotLog(LogLevel.Information,
                     "Abriu {Name} em {Position}.",
                     door.Name,

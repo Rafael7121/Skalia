@@ -138,7 +138,13 @@ namespace SkaliaDeps
             var type = zone != null
                 ? zone.DeadzoneType
                 : s_MapHasFullSuitZone ? EDeadzoneType.FullSuitRadiation : EDeadzoneType.DefaultRadiation;
-            return IsSuitedFor(type)
+            // 0.1.0-y17.26: the suit may still be in the bag; it goes on at
+            // the edge (IsSuitUpWanted).
+            var ready = IsSuitedFor(type)
+                || (type == EDeadzoneType.FullSuitRadiation
+                    && IsRadiationMask(m_Player.clothing.maskAsset)
+                    && CarriesFullSuit());
+            return ready
                 && (m_Player.clothing.maskQuality >= RadiationEnterQuality || CountFilters() > 0)
                 && m_Player.life.health >= RadiationEnterHealth;
         }
@@ -283,6 +289,13 @@ namespace SkaliaDeps
             string why;
             if (!IsSuitedFor(zone.DeadzoneType))
             {
+                // 0.1.0-y17.26: the suit is going on (IsSuitUpWanted).
+                if (zone.DeadzoneType == EDeadzoneType.FullSuitRadiation
+                    && IsRadiationMask(m_Player.clothing.maskAsset)
+                    && CarriesFullSuit())
+                {
+                    return false;
+                }
                 // Crossing a zone on the way somewhere else stays as it was
                 // before y17.25 while the health holds.
                 if (!IsInRadiation(m_ObjectivePosition) && m_Player.life.health >= RadiationEnterHealth)
@@ -467,16 +480,121 @@ namespace SkaliaDeps
             return gearProof == wornProof ? 0 : gearProof ? 1 : -1;
         }
 
-        // The suit on a map with full-suit zones: a proof shirt or pants over
-        // a plain one; a plain one never over it.
-        private static int RadiationSuitOrder(ItemClothingAsset gear, ItemClothingAsset? worn)
+        // ---- 0.1.0-y17.26: the suit in the bag (the tester, 20/11: "e quando
+        // sai ele volta com o equipamento dele ne?"). y17.25 put it on for
+        // good and dropped the bot's own shirt and pants. Now one proof shirt
+        // and one proof pants ride in the bag; they go on at the edge of a
+        // full-suit zone the bot is heading into, and the bot's own clothes
+        // come back once it is out. ----
+        private const float SuitUpMeters = 25f;
+
+        private static bool IsSuitPiece(ItemAsset? asset)
         {
-            if ((gear.type != EItemType.SHIRT && gear.type != EItemType.PANTS) || !MapHasDeadzone || !s_MapHasFullSuitZone)
+            return asset is ItemClothingAsset gear
+                && (gear.type == EItemType.SHIRT || gear.type == EItemType.PANTS)
+                && gear.proofRadiation;
+        }
+
+        private bool IsWearingSuitPiece()
+        {
+            var clothing = m_Player.clothing;
+            return (clothing.shirtAsset != null && clothing.shirtAsset.proofRadiation)
+                || (clothing.pantsAsset != null && clothing.pantsAsset.proofRadiation);
+        }
+
+        private bool CarriesSuitPiece(EItemType type)
+        {
+            var clothing = m_Player.clothing;
+            ItemClothingAsset? worn = type == EItemType.SHIRT ? (ItemClothingAsset?)clothing.shirtAsset : clothing.pantsAsset;
+            if (worn != null && worn.proofRadiation)
+            {
+                return true;
+            }
+            for (byte page = PlayerInventory.SLOTS; page < PlayerInventory.STORAGE; page++)
+            {
+                var itemCount = m_Player.inventory.getItemCount(page);
+                for (byte index = 0; index < itemCount; index++)
+                {
+                    var asset = m_Player.inventory.getItem(page, index)?.GetAsset();
+                    if (asset != null && asset.type == type && IsSuitPiece(asset))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool CarriesFullSuit()
+        {
+            return CarriesSuitPiece(EItemType.SHIRT) && CarriesSuitPiece(EItemType.PANTS);
+        }
+
+        private bool WantsSuitLoot(ItemAsset asset)
+        {
+            EnsureDeadzones();
+            return s_MapHasFullSuitZone
+                && IsSuitPiece(asset)
+                && !CarriesSuitPiece(asset.type)
+                && HasInventorySpaceFor(asset);
+        }
+
+        // Not torn into bandages: the suit, and the bot's own clothes while
+        // it wears the suit.
+        private bool IsKeptForRadiation(ItemAsset asset)
+        {
+            EnsureDeadzones();
+            if (!s_MapHasFullSuitZone || !(asset is ItemClothingAsset gear)
+                || (gear.type != EItemType.SHIRT && gear.type != EItemType.PANTS))
+            {
+                return false;
+            }
+            return gear.proofRadiation || IsWearingSuitPiece();
+        }
+
+        // In a full-suit zone, or heading into one and at its edge.
+        private bool IsSuitUpWanted()
+        {
+            EnsureDeadzones();
+            if (!s_MapHasFullSuitZone || !IsRadiationMask(m_Player.clothing.maskAsset) || !CarriesFullSuit())
+            {
+                return false;
+            }
+            var movement = m_Player.movement;
+            if (movement.isRadiated && movement.ActiveDeadzone != null
+                && movement.ActiveDeadzone.DeadzoneType == EDeadzoneType.FullSuitRadiation)
+            {
+                return true;
+            }
+            if (m_ObjectiveType == ObjectiveType.None || m_RadiationExitActive)
+            {
+                return false;
+            }
+            var goal = GetDeadzoneAt(m_ObjectivePosition);
+            return goal != null
+                && goal.DeadzoneType == EDeadzoneType.FullSuitRadiation
+                && IsInRadiation(m_Player.transform.position, SuitUpMeters);
+        }
+
+        // For WearBetterBags: 1 put this shirt or pants on now, -1 leave it in
+        // the bag, 0 the usual rule.
+        private int GetSuitWearDecision(ItemAsset asset, ushort wornId, bool suitUp)
+        {
+            EnsureDeadzones();
+            if (!s_MapHasFullSuitZone || !(asset is ItemClothingAsset gear))
             {
                 return 0;
             }
-            var wornProof = worn != null && worn.proofRadiation;
-            return gear.proofRadiation == wornProof ? 0 : gear.proofRadiation ? 1 : -1;
+            var wornProof = Assets.find(EAssetType.ITEM, wornId) is ItemClothingAsset worn && worn.proofRadiation;
+            if (suitUp)
+            {
+                return gear.proofRadiation && !wornProof ? 1 : -1;
+            }
+            if (wornProof && !gear.proofRadiation)
+            {
+                return 1;
+            }
+            return gear.proofRadiation && wornId != 0 ? -1 : 0;
         }
     }
 }

@@ -47,6 +47,18 @@ namespace SkaliaDeps
 
         public bool IsClosed => State != null && !State.isUsed;
 
+        // 0.1.0-y17.26: the map's own conditions to open it, as the game
+        // checks them for a player (ObjectManager.ReceiveToggleObjectBinaryStateRequest):
+        // a key door of Arid or Elver needs the key item in the bag.
+        public ObjectAsset? Asset;
+        public readonly List<ushort> Keys = new List<ushort>();
+
+        public bool CanOpen(Player player)
+        {
+            return Asset == null
+                || (Asset.areConditionsMet(player) && Asset.areInteractabilityConditionsMet(player));
+        }
+
         // Where a player presses F: the middle of the leaves (the object's
         // middle when it has none).
         public Vector3 UsePoint
@@ -89,6 +101,12 @@ namespace SkaliaDeps
         private static string? s_Map;
         private static readonly List<BotBuilding> s_Buildings = new List<BotBuilding>();
         private static readonly List<BotDoor> s_Doors = new List<BotDoor>();
+        private static readonly HashSet<ushort> s_KeyItems = new HashSet<ushort>();
+
+        // 0.1.0-y17.26: the items some door of the map asks for.
+        public static HashSet<ushort> KeyItems => s_KeyItems;
+
+        public static IReadOnlyList<BotDoor> Doors => s_Doors;
         private static readonly Dictionary<long, List<int>> s_BuildingCells = new Dictionary<long, List<int>>();
         private static readonly Dictionary<long, List<int>> s_DoorCells = new Dictionary<long, List<int>>();
 
@@ -166,6 +184,7 @@ namespace SkaliaDeps
                             {
                                 var door = new BotDoor
                                 {
+                                    Asset = asset,
                                     Transform = transform,
                                     State = binary,
                                     Center = CombinedBounds(transform, colliders, out var doorBounds)
@@ -181,6 +200,21 @@ namespace SkaliaDeps
                                         && SkaliaBotUnityNavmesh.IsThinLeaf(collider))
                                     {
                                         door.Leaves.Add(collider);
+                                    }
+                                }
+#pragma warning disable CS0612
+                                var conditions = asset.interactabilityConditions;
+#pragma warning restore CS0612
+                                if (conditions != null)
+                                {
+                                    foreach (var condition in conditions)
+                                    {
+                                        if (condition is NPCItemCondition needsItem
+                                            && needsItem.GetItemAsset() is ItemAsset key
+                                            && !door.Keys.Contains(key.id))
+                                        {
+                                            door.Keys.Add(key.id);
+                                        }
                                     }
                                 }
                                 doors.Add(door);
@@ -254,9 +288,29 @@ namespace SkaliaDeps
                     AddToCells(s_DoorCells, doorCell, i);
                 }
                 var closed = 0;
+                s_KeyItems.Clear();
+                var keyDoors = 0;
                 foreach (var door in s_Doors)
                 {
                     if (door.IsClosed) closed++;
+                    if (door.Keys.Count > 0)
+                    {
+                        keyDoors++;
+                        s_KeyItems.UnionWith(door.Keys);
+                    }
+                }
+                if (keyDoors > 0)
+                {
+                    var names = new List<string>();
+                    foreach (var id in s_KeyItems)
+                    {
+                        names.Add((Assets.find(EAssetType.ITEM, id) as ItemAsset)?.itemName ?? id.ToString());
+                    }
+                    logger.LogInformation(
+                        "Portas com chave em {Map}: {Doors} porta(s), chaves {Keys}.",
+                        map,
+                        keyDoors,
+                        string.Join(", ", names));
                 }
                 var withoutDoorway = 0;
                 foreach (var building in s_Buildings)
@@ -568,11 +622,20 @@ namespace SkaliaDeps
             }
         }
 
-        public static bool Open(BotDoor door)
+        // 0.1.0-y17.26: opened as the game opens it for a player: only with
+        // its conditions met (the key in the bag), which are then applied
+        // (a key the map takes is taken) and its rewards given. Before, a
+        // locked door opened for a bot with no key.
+        public static bool Open(BotDoor door, Player player)
         {
-            if (door.Transform == null || !door.IsClosed || !door.State.isUsable)
+            if (door.Transform == null || !door.IsClosed || !door.State.isUsable || !door.CanOpen(player))
             {
                 return false;
+            }
+            if (door.Asset != null)
+            {
+                door.Asset.ApplyInteractabilityConditions(player);
+                door.Asset.GrantInteractabilityRewards(player);
             }
             ObjectManager.forceObjectBinaryState(door.Transform, true);
             return !door.IsClosed;

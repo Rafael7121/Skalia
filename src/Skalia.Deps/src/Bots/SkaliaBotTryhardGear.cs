@@ -1130,7 +1130,10 @@ namespace SkaliaDeps
                     var asset = m_Player.inventory.getItem(page, index)?.GetAsset();
                     if (asset == null
                         || !s_TearBySource!.TryGetValue(asset.id, out var blueprint)
-                        || IsWearUpgrade(asset))
+                        || IsWearUpgrade(asset)
+                        // 0.1.0-y17.26: the radiation suit and the clothes it
+                        // goes back to (SkaliaBotRadiationY).
+                        || IsKeptForRadiation(asset))
                     {
                         // A better piece waits to be put on: never torn.
                         continue;
@@ -1164,12 +1167,6 @@ namespace SkaliaDeps
             if (asset.id == wornId)
             {
                 return false;
-            }
-            // 0.1.0-y17.25: the radiation suit on a map with full-suit zones.
-            var suitOrder = RadiationSuitOrder(gear, Assets.find(EAssetType.ITEM, wornId) as ItemClothingAsset);
-            if (suitOrder != 0)
-            {
-                return suitOrder > 0;
             }
             if (!(Assets.find(EAssetType.ITEM, wornId) is ItemClothingAsset worn))
             {
