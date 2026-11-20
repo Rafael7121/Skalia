@@ -1165,6 +1165,12 @@ namespace SkaliaDeps
             {
                 return false;
             }
+            // 0.1.0-y17.25: the radiation suit on a map with full-suit zones.
+            var suitOrder = RadiationSuitOrder(gear, Assets.find(EAssetType.ITEM, wornId) as ItemClothingAsset);
+            if (suitOrder != 0)
+            {
+                return suitOrder > 0;
+            }
             if (!(Assets.find(EAssetType.ITEM, wornId) is ItemClothingAsset worn))
             {
                 return gear.movementSpeedMultiplier >= 0.99f

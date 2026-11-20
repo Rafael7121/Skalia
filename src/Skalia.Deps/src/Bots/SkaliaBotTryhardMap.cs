@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Pathfinding;
@@ -493,7 +494,9 @@ namespace SkaliaDeps
             if (!equipped && s_StrongSpots!.Count > 0)
             {
                 var ranked = new List<KeyValuePair<float, StrongSpot>>();
-                foreach (var spot in s_StrongSpots)
+                // 0.1.0-y17.25: and the ones in a deadzone it can go into
+                // (SkaliaBotRadiationY).
+                foreach (var spot in s_StrongSpots.Concat(GetEnterableRadiationSpots()))
                 {
                     var distance = (spot.Center - position).GetHorizontalMagnitude();
                     var rank = spot.Value / (distance + TryhardSpotDistanceWeight);

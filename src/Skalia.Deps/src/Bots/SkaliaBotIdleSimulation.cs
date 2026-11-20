@@ -803,6 +803,10 @@ namespace SkaliaDeps
         {
             return new BotReactiveSelectorNode(
                 new BotActionNode(TickHazardBehavior),
+                // 0.1.0-y17.25: out of a deadzone in time (SkaliaBotRadiationY).
+                new BotReactiveSequenceNode(
+                    new BotConditionNode(IsRadiationExitRequired),
+                    new BotActionNode(TickRadiationExitBehavior)),
                 new BotReactiveSequenceNode(
                     new BotConditionNode(IsWaterBehaviorRequired),
                     new BotActionNode(TickWaterBehavior)),
@@ -13445,7 +13449,7 @@ namespace SkaliaDeps
                         || IsInRememberedIsland(item.point, now)
                         || IsWithinMegaReach(item.point)
                         || IsSkippedContainerLoot(item.point)
-                        || IsInRadiation(item.point)
+                        || IsRadiationClosedFor(item.point)
                         || (IsInFinishedAreaFarAway(item.point, position, now)
                             && !((needFood && asset.type == EItemType.FOOD)
                                  || (needWater && asset.type == EItemType.WATER)))
@@ -13695,6 +13699,11 @@ namespace SkaliaDeps
             if (m_RearmPending)
             {
                 TryRearm(now);
+                return;
+            }
+            // 0.1.0-y17.25: a filter into the gas mask (SkaliaBotRadiationY).
+            if (TryStartFilterUse(now))
+            {
                 return;
             }
             // x19: the virus under the line falls by itself (SkaliaBotX19).
@@ -14386,9 +14395,11 @@ namespace SkaliaDeps
             // bandage took 15 -> 27 at 13:09:26 of 18/11 and the bot only
             // saw it at 13:09:30, holding it with the tester running in. Done
             // as soon as the health or the bleeding shows it.
-            var landed = !m_TreatmentIsMeal
-                && (m_Player.life.health > m_TreatmentHealthBefore
-                    || (m_TreatmentBleedingBefore && !m_Player.life.isBleeding));
+            var landed = m_TreatmentIsFilter
+                ? m_Player.clothing.maskQuality > m_TreatmentFilterBefore
+                : !m_TreatmentIsMeal
+                    && (m_Player.life.health > m_TreatmentHealthBefore
+                        || (m_TreatmentBleedingBefore && !m_Player.life.isBleeding));
             if (m_TreatmentUseRequested
                 || (holding && !landed && now - m_TreatmentPhaseSince < 6f)
                 || (equipment.isBusy && now - m_TreatmentPhaseSince < 6f))
@@ -14396,6 +14407,17 @@ namespace SkaliaDeps
                 return;
             }
             var life = m_Player.life;
+            if (m_TreatmentIsFilter)
+            {
+                BotLog(LogLevel.Information,
+                    "Radiacao: filtro {Item} usado: mascara {Before}% -> {After}% ({Filters} filtro(s) restantes).",
+                    m_TreatmentItemName,
+                    m_TreatmentFilterBefore,
+                    m_Player.clothing.maskQuality,
+                    CountFilters());
+                EndTreatment(now, 2f);
+                return;
+            }
             if (m_TreatmentIsMeal)
             {
                 BotLog(LogLevel.Information,
@@ -14504,6 +14526,7 @@ namespace SkaliaDeps
         {
             m_TreatmentPhase = 0;
             m_TreatmentUseRequested = false;
+            m_TreatmentIsFilter = false;
             m_TreatmentEndedAt = now;
             m_WeaponSwapBlockedUntil = 0f;
             m_EquipAttemptCount = 0;
@@ -14897,6 +14920,9 @@ namespace SkaliaDeps
                 case EItemType.BARRICADE:
                     // 0.2.1: one bed, to place and claim (SkaliaBotHome).
                     return WantsBedLoot(asset);
+                case EItemType.FILTER:
+                    // 0.1.0-y17.25: filters for the gas mask (SkaliaBotRadiationY).
+                    return WantsFilterLoot(asset);
                 case EItemType.SUPPLY:
                     if (IsAmmoBox(asset.id))
                     {
@@ -16581,6 +16607,14 @@ namespace SkaliaDeps
             {
                 return true;
             }
+            // 0.1.0-y17.25: the gas mask on a map with deadzones.
+            var maskOrder = wornId == asset.id
+                ? 0
+                : RadiationMaskOrder(gear, Assets.find(EAssetType.ITEM, wornId) as ItemClothingAsset);
+            if (maskOrder != 0)
+            {
+                return maskOrder > 0;
+            }
             return wornId != asset.id
                 && Assets.find(EAssetType.ITEM, wornId) is ItemClothingAsset worn
                 && gear.armor < worn.armor - 0.04f;
@@ -17986,7 +18020,7 @@ namespace SkaliaDeps
                     if ((spawn.point - center).GetHorizontalMagnitude() > InterestAreaRadiusMeters
                         || IsInDangerZone(spawn.point, DangerZoneLootMeters)
                         || IsSkippedContainerLoot(spawn.point)
-                        || IsInRadiation(spawn.point))
+                        || IsRadiationClosedFor(spawn.point))
                     {
                         continue;
                     }
@@ -18676,7 +18710,7 @@ namespace SkaliaDeps
             {
                 return;
             }
-            if (IsHazardousPosition(candidate, now, 2f) || IsInRadiation(candidate, 15f))
+            if (IsHazardousPosition(candidate, now, 2f) || IsRadiationClosedFor(candidate, 15f))
             {
                 return;
             }

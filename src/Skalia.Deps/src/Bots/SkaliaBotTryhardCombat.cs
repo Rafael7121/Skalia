@@ -516,7 +516,9 @@ namespace SkaliaDeps
         private static bool IsUsefulHeadgear(ItemClothingAsset gear)
         {
             return gear.armor <= 0.95f
-                || (gear is ItemGlassesAsset glasses && glasses.vision != ELightingVision.NONE);
+                || (gear is ItemGlassesAsset glasses && glasses.vision != ELightingVision.NONE)
+                // 0.1.0-y17.25: the gas mask where there are deadzones.
+                || (IsRadiationMask(gear) && MapHasDeadzone);
         }
 
         private void TakeOffUselessHeadgear(float now)

@@ -468,7 +468,10 @@ namespace SkaliaDeps
                         }
                         foreach (var levelObject in objects)
                         {
+                            // Filled from interactabilityConditionsList on load.
+#pragma warning disable CS0612
                             var conditions = levelObject?.asset?.interactabilityConditions;
+#pragma warning restore CS0612
                             if (conditions == null)
                             {
                                 continue;
@@ -477,7 +480,7 @@ namespace SkaliaDeps
                             {
                                 if (condition is NPCItemCondition needsItem)
                                 {
-                                    var name = needsItem.GetItemAsset()?.itemName ?? needsItem.id.ToString();
+                                    var name = needsItem.GetItemAsset()?.itemName ?? "item desconhecido";
                                     keys.TryGetValue(name, out var count);
                                     keys[name] = count + 1;
                                 }
