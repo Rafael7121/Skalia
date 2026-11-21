@@ -17,7 +17,7 @@
     <NoWarn>$(NoWarn);NU1701;NU1702;CS0436;CS0618;CS0649;CS0169;CS0414</NoWarn>
     <Version>0.1.0</Version>
     <!-- Bots: 0.2.2x17 do servidor publico + x18 do Skalia. -->
-    <InformationalVersion>0.1.0-y17.28</InformationalVersion>
+    <InformationalVersion>0.1.0-y17.29</InformationalVersion>
     <PublicizerRuntimeStrategies>Unsafe</PublicizerRuntimeStrategies>
     <PlatformTarget>x64</PlatformTarget>
     <!-- Pasta do U3DS instalado. As DLLs do jogo so sao referenciadas, nunca copiadas. -->

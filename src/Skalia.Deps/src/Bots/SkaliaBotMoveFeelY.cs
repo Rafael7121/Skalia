@@ -13,10 +13,12 @@ namespace SkaliaDeps
     //   more than 3 minutes), the bots 36%. The searching of an area
     //   ("Patrol") was walked end to end: 202 minutes moving, 1% of it
     //   sprinting; the trips 48%.
-    // - between two sprints the players walked 0.1/0.2/0.4/0.9/2.1s (p10 to
-    //   p90; p95 3.1, p99 6.8), the bots 1.2 to 2.8s by rule; the sprints
-    //   themselves 0.2/0.6/1.9/5.4/12.5s (p95 18.6, p99 38.8), the bots'
-    //   drawn up to 10s. Day and night alike (night 1.9s and 0.4s medians);
+    // - between two sprints the players walked 0.1/0.2/0.3/0.8/1.8s (p10 to
+    //   p90; p95 2.8, p99 5.9), the bots 1.2 to 2.8s by rule; the sprints
+    //   themselves 0.2/0.5/1.7/4.7/11.0s (p95 16.3, p99 34.1), the bots'
+    //   drawn up to 10s. 0.1.0-y17.29: timed by the rows' own clock
+    //   (tools/recordings/movement.py); y17.27 took 0.1s a row and the rows
+    //   come every 0.08-0.1s, 10-15% long. Day and night alike (the night's medians the day's);
     //   at night the players stood still more (16% against 7%), which the
     //   stops of SkaliaBotPlayerHabits keep.
     // - they looked more than 60 degrees off the way they went 4.8 times a
@@ -31,8 +33,8 @@ namespace SkaliaDeps
     internal sealed partial class SkaliaBotIdleSimulation
     {
         private static readonly float[] s_MoveRunQuantiles = { 0f, 0.1f, 0.25f, 0.5f, 0.75f, 0.9f, 0.95f, 0.99f, 1f };
-        private static readonly float[] s_PlayersSprintRunSeconds = { 0.2f, 0.2f, 0.6f, 1.9f, 5.4f, 12.5f, 18.6f, 38.8f, 38.8f };
-        private static readonly float[] s_PlayersWalkBetweenSeconds = { 0.1f, 0.1f, 0.2f, 0.4f, 0.9f, 2.1f, 3.1f, 6.8f, 6.8f };
+        private static readonly float[] s_PlayersSprintRunSeconds = { 0.2f, 0.2f, 0.5f, 1.7f, 4.7f, 11.0f, 16.3f, 34.1f, 34.1f };
+        private static readonly float[] s_PlayersWalkBetweenSeconds = { 0.1f, 0.1f, 0.2f, 0.3f, 0.8f, 1.8f, 2.8f, 5.9f, 5.9f };
 
         // The looks more than 60 degrees off the way: how far (the furthest
         // point of each) and how long past 60, p10 to p90.
