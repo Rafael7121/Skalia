@@ -73,16 +73,14 @@ namespace Skalia.Launcher
             Fixed(Toggle(BotBehavior, "serverBot:behavior:freshDeathAvoidance", null, null, true)),
 
             // Modificadores no estilo SPT: 1x = o comportamento tirado das gravacoes.
-            Slide("serverBot:modifiers:visionRange", "Alcance de visão", "Distância em que percebem jogadores e zumbis.", 0.25, 1.75),
+            Slide("serverBot:modifiers:visionRange", "Alcance de visão", "Distância em que percebem jogadores e zumbis. Nunca passa do alcance da arma.", 0.25, 1.75),
             Slide("serverBot:modifiers:fieldOfView", "Campo de visão", "Ângulo que enxergam, para os lados e para cima e baixo.", 0.5, 1.5),
             Slide("serverBot:modifiers:hearing", "Audição", "Até onde ouvem tiros e balas passando perto.", 0.25, 1.75),
             Slide("serverBot:modifiers:reactionTime", "Tempo de reação", "Abaixo de 1x viram e atiram mais rápido.", 0.25, 1.75),
             Slide("serverBot:modifiers:aimSpeed", "Velocidade da mira", "Acima de 1x travam no alvo mais rápido.", 0.25, 1.75),
             Slide("serverBot:modifiers:accuracy", "Precisão", "Acima de 1x a mira fecha mais.", 0.25, 1.75),
             Slide("serverBot:modifiers:courage", "Coragem", "Acima de 1x lutam com menos vida antes de fugir ou se curar.", 0.25, 1.75),
-            Slide("serverBot:modifiers:fightDistance", "Distância de luta", "Acima de 1x preferem lutar mais de longe.", 0.25, 1.75),
             Slide("serverBot:modifiers:cover", "Uso de cobertura", "Acima de 1x se agacham e se escondem mais.", 0.25, 1.75),
-            Slide("serverBot:modifiers:looting", "Vontade de saquear", "Acima de 1x param mais para pegar loot antes de lutar.", 0.25, 1.75),
         };
 
         public static PluginOption Find(string id) => All.FirstOrDefault(o => o.Id == id);
@@ -96,13 +94,13 @@ namespace Skalia.Launcher
         public static readonly Dictionary<string, Dictionary<string, string>> BotProfileValues = new Dictionary<string, Dictionary<string, string>>
         {
             // Padrao e como os jogadores gravados jogam hoje.
-            { "default", Profile(1, 1, 1, 1, 1, 1, 1, 1, 1, 1) },
-            { "hard", Profile(1.25, 1, 1.25, 0.75, 1.25, 1.25, 1.25, 1, 1.25, 1) },
-            { "tryhard", Profile(1.5, 1.25, 1.5, 0.5, 1.5, 1.5, 1.5, 1, 1.5, 0.75) },
+            { "default", Profile(1, 1, 1, 1, 1, 1, 1, 1) },
+            { "hard", Profile(1.25, 1, 1.25, 0.75, 1.25, 1.25, 1.25, 1.25) },
+            { "tryhard", Profile(1.5, 1.25, 1.5, 0.5, 1.5, 1.5, 1.5, 1.5) },
         };
 
         private static Dictionary<string, string> Profile(double vision, double fov, double hearing, double reaction, double accuracy, double courage,
-            double aimSpeed, double fightDistance, double cover, double looting) =>
+            double aimSpeed, double cover) =>
             new Dictionary<string, string>
             {
                 { "serverBot:modifiers:visionRange", N(vision) },
@@ -112,9 +110,7 @@ namespace Skalia.Launcher
                 { "serverBot:modifiers:accuracy", N(accuracy) },
                 { "serverBot:modifiers:courage", N(courage) },
                 { "serverBot:modifiers:aimSpeed", N(aimSpeed) },
-                { "serverBot:modifiers:fightDistance", N(fightDistance) },
                 { "serverBot:modifiers:cover", N(cover) },
-                { "serverBot:modifiers:looting", N(looting) },
             };
 
         private static string N(double value) => value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
