@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: SKALIA
-description: Launcher escuro e direto para jogar Unturned offline com bots. Uma cor de destaque (bege do chapéu) reservada para a ação de jogar.
+description: A dark, direct launcher for playing Unturned offline with bots. One accent color (the beige of the hat) is kept for the play action.
 colors:
   sidebar: "#0D0E12"
   window: "#13151A"
@@ -127,114 +127,126 @@ components:
     backgroundColor: "{colors.toggle-off}"
     rounded: "{rounded.toggle}"
     size: 40px
+  slider:
+    trackColor: "{colors.input-border}"
+    fillColor: "{colors.accent}"
+    knobColor: "{colors.accent}"
+    height: 28px
+  tab:
+    textColor: "{colors.muted}"
+    typography: "{typography.body}"
+    height: 34px
+  tab-selected:
+    textColor: "{colors.text}"
+    underlineColor: "{colors.accent}"
 ---
 
 # SKALIA
 
-Fonte da verdade do visual do launcher. Os tokens acima espelham `src/Skalia.Launcher/Theme.cs`; se um mudar, o outro muda junto. Formato: [DESIGN.md](https://github.com/google-labs-code/design.md).
+The source of truth for how the launcher looks. The tokens above mirror `src/Skalia.Launcher/Theme.cs`; when one changes, the other changes with it. Format: [DESIGN.md](https://github.com/google-labs-code/design.md).
 
 ## Overview
 
-O SKALIA é a tela que fica entre o jogador e o Unturned: escolher mapa, ajustar o servidor e apertar PLAY. Quem abre quer jogar em segundos, então a tela tem uma ação principal e todo o resto é configuração opcional.
+SKALIA is the screen between the player and Unturned: pick a map, adjust the server, press PLAY. Whoever opens it wants to be playing within seconds, so each screen has one main action and everything else is optional setup.
 
-- **Escuro por motivo, não por moda.** O launcher abre ao lado de um jogo e é usado à noite, em tela cheia, junto do Unturned. Um tema claro ofuscaria na troca de janela.
-- **Uma ação por tela.** O botão PLAY / JOIN GAME é a única coisa em cor de destaque que pede clique. O resto é neutro.
-- **O simples primeiro.** Na página Servidor, o que todo mundo mexe (nome, mapa, dificuldade, loot, zumbis, PvP) fica no topo; bots e regras finas ficam dentro de "Configurações avançadas", fechado por padrão.
-- **Nada de dev na cara do jogador.** Plugins internos (SKALIA DEPS), gravação, comandos e nomes de outros projetos não aparecem na interface.
+- **Dark for a reason.** The launcher sits next to a game, often at night and full screen. A light theme would glare on every window switch.
+- **One action per screen.** PLAY / JOIN GAME is the only accent-colored thing that asks for a click. Everything else is neutral.
+- **Simple first.** On the Server page, what everyone touches (name, map, difficulty, loot, zombies, PvP) is at the top. Bots and fine rules live under "Advanced settings", closed by default.
+- **No developer tooling in the player's face.** Internal plugins, recording, admin commands and log switches stay out of the main flow; the few developer switches live in a closed "Developer" section.
 
 ## Colors
 
-Escala de cinzas azulados em quatro camadas, mais um bege tirado do chapéu do ícone.
+Four layers of bluish grays, plus one beige taken from the hat in the icon.
 
-- **sidebar (#0D0E12)** é a camada mais funda: barra lateral e fundo do console.
-- **window (#13151A)** é o fundo das páginas.
-- **card (#1C1F26)** agrupa campos relacionados. É a única "elevação" do app.
-- **input (#262A33)** marca o que é editável: caixas, combos e botões secundários.
-- **text (#EBECF0)** é o texto principal; **muted (#9298A6)** é para rótulos, dicas e itens de menu não selecionados.
-- **accent (#D6C08C)** é o bege do chapéu, a identidade do SKALIA, e **on-accent (#181610)** é o texto em cima dele.
-- **good (#6ECF8C)** e **warn (#E8B85C)** só aparecem no status do servidor (online / carregando, salvando).
+- **sidebar (#0D0E12)** is the deepest layer: the sidebar and the console background.
+- **window (#13151A)** is the page background.
+- **card (#1C1F26)** groups related fields. It is the only "elevation" in the app.
+- **input (#262A33)** marks what can be edited: text boxes, dropdowns and secondary buttons.
+- **text (#EBECF0)** is the main text; **muted (#9298A6)** is for labels, hints and unselected menu items.
+- **accent (#D6C08C)** is the hat's beige, SKALIA's identity, and **on-accent (#181610)** is the text on top of it.
+- **good (#6ECF8C)** and **warn (#E8B85C)** only appear in the server status (online / loading, saving).
 
-Regras da cor de destaque:
+Rules for the accent:
 
-- Ela vai no **botão principal** (PLAY / JOIN GAME), nos **toggles ligados** e no **marcador do item selecionado** do menu. Esses três marcam ação ou estado real.
-- Ela **não** vai em títulos de seção, links de texto, ícones decorativos ou bordas. Título é `text`; link de expandir é `muted` com seta.
-- good e warn nunca viram decoração: cada uso corresponde a um estado do servidor.
+- It goes on the **main button** (PLAY / JOIN GAME), **switches that are on**, the **selected menu item and tab marker**, and the **filled part of a slider**. Each of these marks a real action or state.
+- It does **not** go on section titles, text links, decorative icons or borders. Titles are `text`; the expand link is `muted` with an arrow.
+- good and warn never become decoration: each use matches a server state.
 
-Contraste medido (WCAG): text em card 13,97:1; muted em card 5,7:1; muted em input 4,97:1; on-accent em accent 10,14:1. Nada abaixo de 4,5:1 para texto.
+Measured contrast (WCAG): text on card 13.97:1; muted on card 5.7:1; muted on input 4.97:1; on-accent on accent 10.14:1. No text below 4.5:1.
 
 ## Typography
 
-Segoe UI, a fonte do próprio Windows. Não precisa embutir arquivo de fonte, renderiza nítida com ClearType e combina com as janelas do sistema ao redor.
+Segoe UI, Windows' own font. No font file to ship, it renders sharp with ClearType and matches the system windows around it.
 
-- **page-title (20pt bold):** um por página ("Server", "Plugins & Workshop", "Console").
-- **section-label (10,5pt semibold, cor text):** título dos cards ("Bots", "Regras", "Plugins"). Escrito normal, sem caixa alta e sem espaçamento largo.
-- **field-label / body (10,5pt):** rótulo à esquerda, valor à direita.
-- **hint (9pt, muted):** uma linha embaixo do campo, só quando acrescenta algo que o rótulo não diz.
-- **button-primary (12pt bold, caixa alta):** PLAY e JOIN GAME são os únicos textos em caixa alta, porque são o verbo da tela.
+- **page-title (20pt bold):** one per page ("Server", "Gameplay", "Plugins & Workshop", "Console").
+- **section-label (10.5pt semibold, text color):** card titles ("Bots", "Bot difficulty", "World"). Normal case, no wide tracking.
+- **field-label / body (10.5pt):** label on the left, value on the right.
+- **hint (9pt, muted):** one line under a field, only when it adds something the label does not say.
+- **button-primary (12pt bold, uppercase):** PLAY and JOIN GAME are the only uppercase text, because they are the verb of the screen.
 
-Todo texto passa por `L.Tr()`. Inglês é o padrão e português (Brasil) é opcional, então os layouts precisam aguentar textos até ~30% maiores.
+All text goes through `L.Tr()`. English is the default and Brazilian Portuguese is optional, so layouts must hold text up to ~30% longer.
 
 ## Layout
 
-Uma grade só, definida em `Theme.cs` e `MainForm.cs` (constantes `InputHeight`, `LabelWidth`, `FieldWidth`, `CardPadX`, `RowGap`, `CardGap`, `SectionGap`). Nada de número solto no meio do layout.
+One grid, defined in `Theme.cs` and `MainForm.cs` (constants `InputHeight`, `LabelWidth`, `FieldWidth`, `CardPadX`, `RowGap`, `CardGap`, `SectionGap`). No loose numbers in the middle of the layout.
 
-- Janela com **sidebar fixa de 250px** à esquerda: logo, navegação (4 itens), idioma, status do servidor e o botão principal no rodapé. Tudo na sidebar começa em **x = 24**, inclusive o texto do menu. O botão de jogar fica sempre no mesmo lugar, em qualquer página; o rodapé encolhe quando o botão de parar some, sem deixar buraco.
-- Conteúdo com margem de **36px** nas laterais, **28px** no topo e **32px** no fim. A largura do conteúdo é a do card (**618px**): em janela larga sobra espaço à direita, nunca no meio dos cards. Isso vale também quando a barra de rolagem aparece.
-- **Card**: respiro de 24px nas laterais e 20px em cima e embaixo. Grade de duas colunas: rótulo (**200px**, quebra a linha se precisar) e campo (**370px**). Todo campo de uma linha (texto, número, lista) tem **28px de altura e 370px de largura**; caixas de várias linhas têm a mesma largura. Interruptores ocupam a linha toda (570px).
-- **Linhas**: 12px entre uma e outra. O rótulo fica centrado na altura do campo. A dica de um campo fica 4px abaixo dele; a de um interruptor, logo abaixo do título.
-- **Ordem dentro do card**: título, campos, interruptores. Exceção: um campo que depende de um interruptor vem logo abaixo dele (ex.: "Camas por jogador" abaixo de /home).
-- **Entre blocos**: 12px entre cards; 24px antes de um título de seção recolhível; o título recolhível tem 32px de altura.
-- Página mais longa que a janela rola; a sidebar nunca rola.
+- A **fixed 250px sidebar** on the left: logo, navigation (4 items), language, server status and the main button at the bottom. Everything in the sidebar starts at **x = 24**, menu text included. The play button is always in the same place on every page; the footer shrinks when the stop button goes away, without leaving a gap.
+- Content has **36px** side margins, **28px** at the top and **32px** at the end. The content width is the card's (**618px**): a wide window leaves space on the right, never in the middle of the cards. This also holds when the scrollbar shows up.
+- **Card**: 24px of padding on the sides and 20px top and bottom. A two-column grid: label (**200px**, wraps if needed) and field (**370px**). Every single-line field (text, number, dropdown) is **28px tall and 370px wide**; multi-line boxes have the same width. Switches take the whole row (570px).
+- **Rows**: 12px apart. The label is centered on the field's height. A field's hint sits 4px below it; a switch's hint sits right under its title.
+- **Order inside a card**: title, fields, switches. Exception: a field that depends on a switch comes right below it (for example "Beds per player" below /home).
+- **Between blocks**: 12px between cards; 24px before a collapsible section title; the collapsible title is 32px tall.
+- A page longer than the window scrolls; the sidebar never scrolls.
 
 ## Elevation & Depth
 
-Sem sombra, sem blur, sem brilho. A profundidade vem só da troca de camada de cor (sidebar → window → card → input). Um card nunca fica dentro de outro card.
+No shadow, no blur, no glow. Depth comes only from the change of color layer (sidebar → window → card → input). A card is never inside another card; tabs inside a card switch rows, they do not nest cards.
 
 ## Shapes
 
-- Botões: raio 8px. Item de menu: raio 7px. Toggle: trilho em pílula (raio 11px).
-- Cards e campos de texto são retos. Só o que se clica é arredondado, e isso ajuda a separar o que é ação do que é conteúdo.
+- Buttons: 8px radius. Menu item: 7px radius. Switch: pill track (11px radius). Slider knob: circle.
+- Cards and text fields are square. Only what is clicked is rounded, which helps tell actions from content.
 
 ## Motion & Micro-interaction
 
-Só estados de hover e de foco, trocados na hora (sem animação). Nenhum elemento pulsa, pisca ou anima em loop. A bolinha de status muda de cor quando o servidor muda de estado, e é só isso.
+Hover and focus states only, switched instantly (no animation). Nothing pulses, blinks or loops. The status dot changes color when the server changes state, and that is all.
 
 ## Voice & Content Strategy
 
-- Fala com quem quer jogar, não com quem administra servidor. "Loot amount", não "Items/Spawn_Chance".
-- Multiplicadores aparecem como "0.5x / 1x / 2x"; 1x é sempre o padrão da dificuldade escolhida.
-- Status diz o que está acontecendo e o que fazer: "Loading map... This takes a moment." / "Server online. Click JOIN GAME."
-- Erro diz o que falhou e o próximo passo, nunca só "Erro".
-- Sem emoji, sem exclamação, sem jargão de OpenMod ou Unturned interno.
-- Placeholders honestos: lista de bots vazia diz "Empty = names generated automatically", nunca nomes de exemplo falsos.
+- Talk to someone who wants to play, not to a server admin. "Loot amount", not "Items/Spawn_Chance".
+- Multipliers show as "0.5x / 1x / 2x"; 1x is always the default (of the chosen difficulty, or of how the recorded players play, for the bots).
+- Status says what is happening and what to do: "Loading map... This takes a moment." / "Server online. Click JOIN GAME."
+- An error says what failed and the next step, never just "Error".
+- No emoji, no exclamation marks, no OpenMod or Unturned internals.
+- Honest placeholders: an empty bot list says "Empty = names generated automatically", never fake example names.
 
 ## Components
 
-Todos desenhados à mão em `Theme.cs` (WinForms, `UserPaint`), sem estilos padrão do Windows.
+All hand-drawn in WinForms (`UserPaint`), with no default Windows styles.
 
-- **FlatButton** → `@src/Skalia.Launcher/Theme.cs#FlatButton` (`button-primary`, `button-secondary`). Desativado enquanto a ação não é possível (ex.: JOIN GAME só libera com o servidor pronto).
-- **NavButton** → `@src/Skalia.Launcher/Theme.cs#NavButton` (`nav-item`). O selecionado ganha fundo `card`, texto `text` e uma barrinha vertical de 3px em `accent` à esquerda, que marca a página atual.
-- **ToggleSwitch** → `@src/Skalia.Launcher/Theme.cs#ToggleSwitch` (`toggle-on`, `toggle-off`). Rótulo ao lado e dica opcional embaixo; é o controle para qualquer opção liga/desliga.
-- **Combos e campos** → `Theme.StyleInput` (`input`). `Dropdown` substitui o ComboBox: fechado é fundo input, borda de 1px e chevron; aberto é uma lista escura de linhas de 28px, até 10 linhas, com a opção atual marcada por uma barrinha `muted`; `InputFrame` dá a borda de 1px às caixas de texto no lugar da borda nativa; `NumberBox` substitui o NumericUpDown (sem setinhas nativas; seta para cima/baixo muda o valor). A borda clareia para `muted` no foco, nunca para `accent`.
-- **Slider** → `Slider` para multiplicadores (dificuldade dos bots): direto no card, sem fundo de campo. Trilho de 4px `input-border`, bolinha de 16px `accent`, valor ("1.25x") alinhado à direita numa coluna de 56px. Um tracinho `muted` marca o 1x, que fica no meio do trilho, e o trecho entre ele e a bolinha fica `accent`. Passos de 0.05x; setas e Home/End mudam o valor.
-- **Abas dentro de um card** → `TabStrip` (dificuldade dos bots): texto `muted`, a escolhida em `text` com traço `accent` de 2px embaixo, linha de 1px `input-border` sob todas, 20px entre abas, alinhada à coluna dos rótulos. Cada aba mostra só as suas linhas do card; aba sem conteúdo não aparece.
-- **Peças do Windows** → barras de rolagem e barra de título no modo escuro do próprio Windows 10/11 (`Theme.DarkScrollbars`, `Theme.DarkTitleBar`). Nada de controle nativo claro na tela.
-- **Card** → `MainForm.NewCard` (`card`). Um assunto por card, com título opcional. Em "Advanced settings" cada grupo (Bots, Bot behavior, World, Survival, Combat, Server) é um card.
-- **Seção recolhível** → "Advanced settings": texto `muted` com seta, fechado por padrão.
+- **FlatButton** → `@src/Skalia.Launcher/Theme.cs#FlatButton` (`button-primary`, `button-secondary`). Disabled while the action is not possible (JOIN GAME only unlocks once the server is ready).
+- **NavButton** → `@src/Skalia.Launcher/Theme.cs#NavButton` (`nav-item`). The selected one gets a `card` background, `text` color and a 3px vertical `accent` bar on the left that marks the current page.
+- **ToggleSwitch** → `@src/Skalia.Launcher/Theme.cs#ToggleSwitch` (`toggle-on`, `toggle-off`). Label beside it and an optional hint below; the control for any on/off option.
+- **Dropdowns and fields** → `Theme.StyleInput` (`input`). `Dropdown` replaces the ComboBox: closed it is an input background, a 1px border and a chevron; open it is a dark list of 28px rows, up to 10 rows, with the current option marked by a small `muted` bar. `InputFrame` gives text boxes the 1px border instead of the native one. `NumberBox` replaces the NumericUpDown (no native arrows; the up and down keys change the value). The border lightens to `muted` on focus, never to `accent`.
+- **Slider** → `@src/Skalia.Launcher/Slider.cs#Slider` (`slider`), for multipliers (bot difficulty). It sits right on the card, with no field background. A 4px `input-border` track, a 16px `accent` knob and the value ("1.25x") right-aligned in a 56px column. A small `muted` tick marks 1x, which sits in the middle of the track, and the stretch between it and the knob is `accent`. 0.05x steps; the arrow keys and Home/End change the value.
+- **Tabs inside a card** → `@src/Skalia.Launcher/TabStrip.cs#TabStrip` (`tab`, `tab-selected`), for the bot modifiers. `muted` text, the selected tab in `text` with a 2px `accent` underline, a 1px `input-border` line under all of them, 20px between tabs, lined up with the label column. Each tab shows only its own rows of the card; a tab with no content does not appear.
+- **Windows parts** → scrollbars and the title bar use Windows 10/11's own dark mode (`Theme.DarkScrollbars`, `Theme.DarkTitleBar`). No light native control on screen.
+- **Card** → `MainForm.NewCard` (`card`). One subject per card, with an optional title. Under "Advanced settings" each group (Bots, Bot difficulty, World, Survival, Interface and combat, Server) is its own card.
+- **Collapsible section** → "Advanced settings" and "Developer": `muted` text with an arrow, closed by default.
 
 ## Do's and Don'ts
 
-**Faça**
+**Do**
 
-- Deixe o bege para o botão de jogar, os toggles ligados e o item de menu atual.
-- Coloque toda opção nova primeiro em "Configurações avançadas"; ela só sobe para o card básico se a maioria dos jogadores for mexer.
-- Mantenha o rótulo curto e explique o resto numa dica de uma linha, só se a dica disser algo novo.
-- Teste em inglês e em português, e com o servidor parado, carregando e online.
+- Keep the beige for the play button, switches that are on, the current menu item or tab, and slider fills.
+- Put every new option under "Advanced settings" first; it only moves up to the basic card if most players will touch it.
+- Keep labels short and explain the rest in a one-line hint, only if the hint says something new.
+- Test in English and in Portuguese, and with the server stopped, loading and online.
 
-**Não faça**
+**Don't**
 
-- Não use caixa alta colorida em títulos de seção.
-- Não repita a mesma dica embaixo de vários campos: se vale para o grupo, ela vai uma vez no título do grupo.
-- Não use gradiente, sombra, brilho, emoji ou animação em loop.
-- Não mostre plugins internos, IDs técnicos ou caminhos de arquivo, a não ser no Console.
-- Não crie controle que não faz nada. Se a função não existe, o controle não aparece.
+- Don't use colored uppercase in section titles.
+- Don't repeat the same hint under several fields: if it applies to the group, it goes once at the top of the group.
+- Don't use gradients, shadows, glow, emoji or looping animation.
+- Don't show internal plugins, technical IDs or file paths, except in the Console.
+- Don't add a control that does nothing. If the feature doesn't exist, the control doesn't appear.

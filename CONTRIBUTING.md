@@ -25,9 +25,11 @@ build.cmd
 | Path | What it is |
 |---|---|
 | `src/Skalia.Launcher/MainForm.cs` | The window and its pages |
-| `src/Skalia.Launcher/Theme.cs` | Colors and the hand-drawn controls |
+| `src/Skalia.Launcher/Theme.cs`, `Slider.cs`, `TabStrip.cs` | Colors and the hand-drawn controls |
 | `src/Skalia.Launcher/ServerManager.cs` | Prepares the server profile, starts and stops the server, opens the game |
 | `src/Skalia.Launcher/GameRules.cs` | Server rules and multipliers written to `Config.txt` |
+| `src/Skalia.Launcher/PluginOptions.cs` | Plugin options, bot difficulty modifiers and starting kits written to the plugin's `config.yaml` |
+| `src/Skalia.Launcher/Settings.cs` | The launcher's own settings (`skalia.json`) |
 | `src/Skalia.Launcher/GamePaths.cs` | Finds Steam and the Dedicated Server |
 | `src/Skalia.Launcher/OpenModInstaller.cs` | Installs OpenMod into the Dedicated Server when it is missing |
 | `src/Skalia.Launcher/L.cs` | English and Brazilian Portuguese text |
