@@ -152,7 +152,7 @@ messages:
     vehicles_global: "<color=#55FF88><b>Limpeza de veículos concluída.</b> Veículos removidos: {Count}.</color>"
 
   administration:
-    hidden_action_complete: "<color=#55FF88>ConcluÃ­do: {Count}.</color>"
+    hidden_action_complete: "<color=#55FF88>Concluído: {Count}.</color>"
     spy_usage: "Uso: /spy <jogador>"
     spy_complete: "<color=#55FF88>Captura de tela nativa solicitada para <color=#228B22>{Player}</color>.</color>"
     navid_result: "<color=#BFE8FF>Mapa: {Map} | Navmesh: {Navigation} | Região de spawn: {SpawnRegion} | Posição: {X}, {Y}, {Z} | Pontos: {Spawnpoints} | Limite atual: {MaxZombies}</color>"
