@@ -24,7 +24,8 @@ namespace SkaliaDeps
     // him when there is none in 12m.
     internal sealed partial class SkaliaBotIdleSimulation
     {
-        private const int PvpBreakHealth = 35;
+        // 0.1.0-y17.34: over serverBot:modifiers:courage.
+        private static float PvpBreakHealth => 35f / SkaliaBotModifiers.Courage;
         private static readonly float[] s_PvpBreakQuantiles = { 0f, 0.25f, 0.5f, 0.75f, 1f };
         private static readonly float[] s_PvpBreakSeconds = { 0f, 0f, 0.6f, 1.2f, 1.6f };
         // Players ran 53 to 62m in 10s; the bandage takes about 4s.

@@ -30,6 +30,22 @@ serverBot:
   # SKALIA: log dos bots (Information e Debug). O launcher escreve esta chave
   # (Developer > Bot logs). false ou ausente: so avisos e erros dos bots.
   botLogs: false
+  # SKALIA: dificuldade dos bots (o launcher grava pelos perfis Padrao,
+  # Dificil e Tryhard). Multiplicam as bases das gravacoes dos jogadores;
+  # 1 ou ausente = como gravado. De 0.25 a 2. reactionTime menor = mais
+  # rapido; courage maior = foge e cura com menos vida. fightDistance e
+  # looting nao tem base gravada e ficam sem efeito.
+  modifiers:
+    visionRange: 1
+    fieldOfView: 1
+    hearing: 1
+    reactionTime: 1
+    aimSpeed: 1
+    accuracy: 1
+    courage: 1
+    fightDistance: 1
+    cover: 1
+    looting: 1
   ipAddress: "127.0.0.2"
   port: 27018
   respawnDelaySeconds: 3

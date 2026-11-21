@@ -65,7 +65,8 @@ namespace SkaliaDeps
 
         // The screen: the game's default field of view is 90 degrees up and
         // down (OptionsSettings: 60 + 40 x 0.75), 121 across at 16:9.
-        private const float PvpViewHalfDegrees = 60f;
+        // 0.1.0-y17.34: times serverBot:modifiers:fieldOfView.
+        private static float PvpViewHalfDegrees => Mathf.Min(180f, 60f * SkaliaBotModifiers.FieldOfView);
 
         // Hit with the shooter off the screen (17 first hits): with him
         // within 42 degrees all 10 found him (to 0-8 degrees); with him at
@@ -222,7 +223,7 @@ namespace SkaliaDeps
         // that its move ends then (SkaliaBotPvpHandY).
         private void SetPvpReactionFrom(float[] seconds, Player attacker, float now)
         {
-            var react = DrawFromQuantiles(s_PvpReactQuantiles, seconds);
+            var react = DrawFromQuantiles(s_PvpReactQuantiles, seconds) * SkaliaBotModifiers.ReactionTime;
             m_PvpReactAt = StartPvpHandReactionToFace(react, now);
         }
 
@@ -246,6 +247,22 @@ namespace SkaliaDeps
             m_PvpPosture = roll < s_PvpPostureShare[band, 0] ? 0
                 : roll < s_PvpPostureShare[band, 0] + s_PvpPostureShare[band, 1] ? 1
                 : 2;
+            // 0.1.0-y17.34: the crouched and prone shares times
+            // serverBot:modifiers:cover (up to all of it), standing the rest.
+            // At 1 the draw above stands as it is.
+            if (SkaliaBotModifiers.Cover != 1f)
+            {
+                var crouch = s_PvpPostureShare[band, 1] * SkaliaBotModifiers.Cover;
+                var prone = s_PvpPostureShare[band, 2] * SkaliaBotModifiers.Cover;
+                var low = crouch + prone;
+                if (low > 1f)
+                {
+                    crouch /= low;
+                    prone /= low;
+                }
+                var stand = 1f - crouch - prone;
+                m_PvpPosture = roll < stand ? 0 : roll < stand + crouch ? 1 : 2;
+            }
             m_PvpHipFire = band == 0 && Random.value > PvpCloseAimShare;
             m_PvpStepUntil = now;
             m_PvpStepAnalog = 0x11;

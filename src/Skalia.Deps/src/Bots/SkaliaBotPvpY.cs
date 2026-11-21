@@ -18,7 +18,8 @@ namespace SkaliaDeps
         // 0.1.0-y16: 5 minutes, 60s before (SkaliaBotPvpSpotY).
         private const float PvpMemorySeconds = 300f;
         private const float PvpLookAfterLostSeconds = 6f;
-        private const float PvpMaxMeters = 250f;
+        // 0.1.0-y17.34: times serverBot:modifiers:visionRange.
+        private static float PvpMaxMeters => 250f * SkaliaBotModifiers.VisionRange;
         private const float PvpZombieFirstMeters = 3f;
         private const float PvpBodyRadius = 0.4f;
         // 0.2.2y: a second out of sight (a tree, a post, the target ducking)
@@ -173,7 +174,7 @@ namespace SkaliaDeps
                         && (attacker.transform.position - m_Player.transform.position).magnitude <= PvpHuntMaxMeters)
                     {
                         m_PvpReactAt = now;
-                        m_PvpFireNotBefore = now + DrawFromQuantiles(s_PvpHitSeenQuantiles, s_PvpHitSeenShotSeconds);
+                        m_PvpFireNotBefore = now + DrawFromQuantiles(s_PvpHitSeenQuantiles, s_PvpHitSeenShotSeconds) * SkaliaBotModifiers.ReactionTime;
                         // 0.1.0-y17.19: the hand after the players' reaction
                         // (SkaliaBotPvpHandY).
                         StartPvpHandReaction(now);
@@ -735,7 +736,8 @@ namespace SkaliaDeps
             {
                 m_PvpNextErrorAt = now + Random.Range(0.4f, 0.8f);
                 var sigma = PvpAimSigmaDegrees(distance);
-                sigma = PvpAimSigmaLessSpread(sigma);
+                // 0.1.0-y17.34: over serverBot:modifiers:accuracy.
+                sigma = PvpAimSigmaLessSpread(sigma) / SkaliaBotModifiers.Accuracy;
                 m_PvpErrorYaw = Gaussian() * sigma;
                 m_PvpErrorPitch = Gaussian() * sigma;
             }

@@ -27,7 +27,9 @@ namespace SkaliaDeps
     // in line (he went behind a tree, a post, a bush, a car).
     internal sealed partial class SkaliaBotIdleSimulation
     {
-        private const float PvpCoverSearchMeters = 10f;
+        // 0.1.0-y17.34: PvpCoverSearchMeters and PvpFightCoverMeters times
+        // serverBot:modifiers:cover.
+        private static float PvpCoverSearchMeters => 10f * SkaliaBotModifiers.Cover;
         private const float PvpCoverFarMeters = 24f;
         // 0.1.0-y17.17 (test of 18/11, 23:36:35-23:37:46): blazex watched
         // the tester's place 92m off with the chest in his line and no cover
@@ -217,8 +219,12 @@ namespace SkaliaDeps
         }
 
         // A spot that hides the chest from the point; with a peek if any.
-        private bool TryFindPvpWatchCover(Vector3 position, Vector3 point, out Vector3 spot, out bool peek, float maxRadius = PvpCoverSearchMeters, bool straight = false, bool sector = false)
+        private bool TryFindPvpWatchCover(Vector3 position, Vector3 point, out Vector3 spot, out bool peek, float maxRadius = -1f, bool straight = false, bool sector = false)
         {
+            if (maxRadius < 0f)
+            {
+                maxRadius = PvpCoverSearchMeters;
+            }
             var now = Time.realtimeSinceStartup;
             spot = position;
             peek = false;

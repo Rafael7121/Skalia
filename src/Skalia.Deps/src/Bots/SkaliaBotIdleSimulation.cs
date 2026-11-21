@@ -746,7 +746,8 @@ namespace SkaliaDeps
         private const float LowHealthEngagementRadiusMeters = 2.5f;
         private const float FleeMinimumZombieDistanceMeters = 2f;
         private const float LootClaimSeconds = 8f;
-        private const float VisualZombieDetectionRadiusMeters = 50f;
+        // 0.1.0-y17.34: times serverBot:modifiers:visionRange.
+        private static float VisualZombieDetectionRadiusMeters => 50f * SkaliaBotModifiers.VisionRange;
         private const float FireZombieVisualRadiusMeters = 65f;
         // 0.2.0: the Mega is seen out to 75m, so a hunt can open fire at 70m.
         private const float BossVisualRadiusMeters = 75f;
@@ -1100,8 +1101,9 @@ namespace SkaliaDeps
         private bool IsLowHealth()
         {
             var life = m_Player.life;
-            return life.health < FleeHealthThreshold
-                || (life.isBleeding && life.health < FleeHealthThreshold + 25f);
+            // 0.1.0-y17.34: over serverBot:modifiers:courage.
+            return life.health < FleeHealthThreshold / SkaliaBotModifiers.Courage
+                || (life.isBleeding && life.health < (FleeHealthThreshold + 25f) / SkaliaBotModifiers.Courage);
         }
 
         private BotBehaviorStatus TickLowHealthFleeBehavior()

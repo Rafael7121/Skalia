@@ -112,6 +112,8 @@ namespace SkaliaDeps
                 Math.Min(1.65f,
                     configuration.GetValue("serverBot:combat:attackDistanceMeters", 1.45f)));
             SkaliaBotIdleSimulation.s_Settings = SkaliaBotBehaviorSettings.Load(configuration, m_Logger);
+            // 0.1.0-y17.34: serverBot:modifiers (SkaliaBotModifiers).
+            SkaliaBotModifiers.Load(configuration, m_Logger);
         }
 
         public void PrepareMaps()

@@ -108,7 +108,7 @@ namespace SkaliaDeps
         // A man just noticed: the hand waits the players' reaction.
         private void StartPvpHandReaction(float now)
         {
-            m_PvpHandGoAt = now + DrawFromQuantiles(s_PvpOnsetQuantiles, s_PvpOnsetSeconds);
+            m_PvpHandGoAt = now + DrawFromQuantiles(s_PvpOnsetQuantiles, s_PvpOnsetSeconds) * SkaliaBotModifiers.ReactionTime;
             m_PvpHandNextFlick = 0f;
             m_PvpHandMoving = false;
         }
@@ -118,8 +118,10 @@ namespace SkaliaDeps
         // the quickest reaction.
         private float StartPvpHandReactionToFace(float faceSeconds, float now)
         {
-            m_PvpHandNextFlick = DrawFromQuantiles(s_PvpHandQuantiles, s_PvpFlickSeconds);
-            m_PvpHandGoAt = now + Mathf.Max(s_PvpOnsetSeconds[0], faceSeconds - m_PvpHandNextFlick);
+            // 0.1.0-y17.34: the move over serverBot:modifiers:aimSpeed, the
+            // quickest reaction times reactionTime.
+            m_PvpHandNextFlick = DrawFromQuantiles(s_PvpHandQuantiles, s_PvpFlickSeconds) / SkaliaBotModifiers.AimSpeed;
+            m_PvpHandGoAt = now + Mathf.Max(s_PvpOnsetSeconds[0] * SkaliaBotModifiers.ReactionTime, faceSeconds - m_PvpHandNextFlick);
             m_PvpHandMoving = false;
             return m_PvpHandGoAt + m_PvpHandNextFlick;
         }
@@ -199,16 +201,16 @@ namespace SkaliaDeps
                 {
                     m_PvpHandSeconds = m_PvpHandNextFlick > 0f
                         ? m_PvpHandNextFlick
-                        : DrawFromQuantiles(s_PvpHandQuantiles, s_PvpFlickSeconds);
+                        : DrawFromQuantiles(s_PvpHandQuantiles, s_PvpFlickSeconds) / SkaliaBotModifiers.AimSpeed;
                     m_PvpHandNextFlick = 0f;
-                    m_PvpHandLag = DrawFromQuantiles(s_PvpTrackLagQuantiles, s_PvpTrackLagSeconds);
+                    m_PvpHandLag = DrawFromQuantiles(s_PvpTrackLagQuantiles, s_PvpTrackLagSeconds) / SkaliaBotModifiers.AimSpeed;
                     var land = DrawFromQuantiles(s_PvpHandQuantiles, s_PvpFlickLandShare);
                     m_PvpHandToYaw = offYaw + gapYaw * (1f - land);
                     m_PvpHandToPitch = offPitch + gapPitch * (1f - land);
                 }
                 else
                 {
-                    m_PvpHandSeconds = DrawFromQuantiles(s_PvpFixQuantiles, s_PvpFixSeconds);
+                    m_PvpHandSeconds = DrawFromQuantiles(s_PvpFixQuantiles, s_PvpFixSeconds) / SkaliaBotModifiers.AimSpeed;
                     m_PvpHandToYaw = offYaw + gapYaw;
                     m_PvpHandToPitch = wantPitch;
                 }

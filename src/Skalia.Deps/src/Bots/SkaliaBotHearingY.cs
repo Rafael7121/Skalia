@@ -40,11 +40,12 @@ namespace SkaliaDeps
     // already waiting.
     internal sealed partial class SkaliaBotIdleSimulation
     {
-        private const float HearAimedMeters = 20f;
+        // 0.1.0-y17.34: HearAimedMeters and HearShotMeters times serverBot:modifiers:hearing.
+        private static float HearAimedMeters => 20f * SkaliaBotModifiers.Hearing;
         private const float HearAimedDegrees = 10f;
         private static readonly float[] s_HearAimedQuantiles = { 0f, 1f / 3f, 2f / 3f, 1f };
         private static readonly float[] s_HearAimedTurnSeconds = { 0.2f, 0.3f, 0.5f, 5.3f };
-        private const float HearShotMeters = 100f;
+        private static float HearShotMeters => 100f * SkaliaBotModifiers.Hearing;
         private const float HearTurnChance = 0.64f;
         private static readonly float[] s_HearQuantiles = { 0f, 0.25f, 0.5f, 0.75f, 1f };
         private static readonly float[] s_HearTurnSeconds = { 0.5f, 1.3f, 1.5f, 3.0f, 3.2f };
@@ -255,9 +256,9 @@ namespace SkaliaDeps
                 BotLog(LogLevel.Debug, "Ouvi tiro de {Name} a {Distance:0}m fora da tela; nao virei.", name, distance);
                 return;
             }
-            var turnIn = aimed
+            var turnIn = (aimed
                 ? DrawFromQuantiles(s_HearAimedQuantiles, s_HearAimedTurnSeconds)
-                : DrawFromQuantiles(s_HearQuantiles, s_HearTurnSeconds);
+                : DrawFromQuantiles(s_HearQuantiles, s_HearTurnSeconds)) * SkaliaBotModifiers.ReactionTime;
             if (aimed && now < m_HeardLookUntil && now + turnIn >= m_HeardTurnAt)
             {
                 return;

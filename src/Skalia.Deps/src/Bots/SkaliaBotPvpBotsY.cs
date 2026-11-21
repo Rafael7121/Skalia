@@ -312,7 +312,7 @@ namespace SkaliaDeps
                 m_PvpSpotted = null;
                 return;
             }
-            var gunReach = now < m_PvpGunFailUntil ? 0f : Mathf.Min(GetPvpGunRange(), PvpMaxMeters);
+            var gunReach = now < m_PvpGunFailUntil ? 0f : Mathf.Min(GetPvpGunRange() * Mathf.Min(1f, SkaliaBotModifiers.VisionRange), PvpMaxMeters);
             var reach = gunReach > 0f ? gunReach : PvpMeleeChaseMeters;
             var origin = m_Player.look.aim.position;
             Player? best = null;
@@ -384,7 +384,7 @@ namespace SkaliaDeps
                     || (IsPvpEnemyFacingMe(best) && (IsPvpArmedToTheEye(best) || bestDistance <= PvpMeleeChaseMeters))
                     ? now
                     : now + DrawFromQuantiles(s_PvpStepQuantiles,
-                        bestDistance <= PvpOpenCloseMeters ? s_PvpOpenCloseSeconds : s_PvpOpenSeconds);
+                        bestDistance <= PvpOpenCloseMeters ? s_PvpOpenCloseSeconds : s_PvpOpenSeconds) * SkaliaBotModifiers.ReactionTime;
             }
             // 0.1.0-y17.3 (the tester, 18/11, Paradise Point: AlemaoGamer, gun in
             // hand with 11 rounds, "era pra ele ter rasgado ele na bala").

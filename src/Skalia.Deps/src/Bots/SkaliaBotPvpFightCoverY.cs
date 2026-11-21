@@ -26,7 +26,7 @@ namespace SkaliaDeps
     internal sealed partial class SkaliaBotIdleSimulation
     {
         private const float PvpWatchedDegrees = 25f;
-        private const float PvpFightCoverMeters = 6f;
+        private static float PvpFightCoverMeters => 6f * SkaliaBotModifiers.Cover;
         private const float PvpFightCoverEverySeconds = 2.5f;
 
         private Vector3 m_PvpFightCoverSpot;
