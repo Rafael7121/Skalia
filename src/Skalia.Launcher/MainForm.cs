@@ -35,7 +35,7 @@ namespace Skalia.Launcher
         private Panel m_Content;
         private TextBox m_Name, m_Welcome, m_Password, m_BotNames, m_Workshop, m_Log;
         private ComboBox m_Map, m_Difficulty, m_Perspective;
-        private NumericUpDown m_MaxPlayers, m_Port, m_BotCount;
+        private NumberBox m_MaxPlayers, m_Port, m_BotCount;
         private ToggleSwitch m_PvP, m_Cheats, m_ShowConsole, m_AutoCallBots, m_BotLogs;
         private Panel m_Dev;
         private Label m_DevHeader;
@@ -69,6 +69,7 @@ namespace Skalia.Launcher
             });
 
             Text = "SKALIA";
+            Theme.DarkTitleBar(this);
             AutoScaleMode = AutoScaleMode.Dpi;
             ClientSize = new Size(1080, 720);
             MinimumSize = new Size(920, 640);
@@ -183,7 +184,7 @@ namespace Skalia.Launcher
             footer.Controls.Add(m_StopButton);
 
             var language = new Panel { Dock = DockStyle.Bottom, Height = 64, BackColor = Theme.Sidebar, Padding = new Padding(20, 0, 20, 12) };
-            var languageBox = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Bottom };
+            var languageBox = new DarkComboBox { Dock = DockStyle.Bottom };
             Theme.StyleInput(languageBox);
             languageBox.Items.Add(new Choice(L.English, "English"));
             languageBox.Items.Add(new Choice(L.Portuguese, "Português (Brasil)"));
@@ -205,8 +206,8 @@ namespace Skalia.Launcher
             var page = NewPage(L.Tr("Servidor"), L.Tr("Escolha o mapa e clique em JOGAR. O resto já vem pronto."));
 
             m_Name = new TextBox();
-            m_Map = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
-            m_Difficulty = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+            m_Map = new DarkComboBox();
+            m_Difficulty = new DarkComboBox();
             m_Difficulty.Items.AddRange(new object[]
             {
                 new Choice("Easy", L.Tr("Fácil")),
@@ -243,7 +244,7 @@ namespace Skalia.Launcher
 
             m_Advanced = new Panel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, BackColor = Theme.Window };
 
-            m_BotCount = new NumericUpDown { Minimum = 0, Maximum = 48 };
+            m_BotCount = new NumberBox { Minimum = 0, Maximum = 48 };
             m_BotNames = new TextBox { Multiline = true, Height = 120, ScrollBars = ScrollBars.Vertical };
             m_AutoCallBots = new ToggleSwitch(L.Tr("Bots entram sozinhos"), L.Tr("Entram assim que o mapa termina de carregar."));
             var bots = NewCard();
@@ -252,12 +253,12 @@ namespace Skalia.Launcher
             AddField(bots, L.Tr("Nomes"), m_BotNames, L.Tr("Um por linha. Vazio = nomes gerados automaticamente."));
             AddWide(bots, m_AutoCallBots);
             AddPluginOptions(bots, PluginOptions.Bots);
-            AddWide(bots, new Panel { Height = 14, Width = 10, BackColor = Theme.Card, Margin = new Padding(0) });
-            AddSection(bots, L.Tr(PluginOptions.BotBehavior));
-            AddPluginOptions(bots, PluginOptions.BotBehavior);
+            var behavior = NewCard();
+            AddSection(behavior, L.Tr(PluginOptions.BotBehavior));
+            AddPluginOptions(behavior, PluginOptions.BotBehavior);
 
-            m_MaxPlayers = new NumericUpDown { Minimum = 1, Maximum = 200 };
-            m_Perspective = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+            m_MaxPlayers = new NumberBox { Minimum = 1, Maximum = 200 };
+            m_Perspective = new DarkComboBox();
             m_Perspective.Items.AddRange(new object[]
             {
                 new Choice("Both", L.Tr("Primeira e terceira pessoa")),
@@ -265,7 +266,7 @@ namespace Skalia.Launcher
                 new Choice("Third", L.Tr("Somente terceira pessoa")),
                 new Choice("Vehicle", L.Tr("Terceira pessoa só em veículos")),
             });
-            m_Port = new NumericUpDown { Minimum = 1024, Maximum = 65000 };
+            m_Port = new NumberBox { Minimum = 1024, Maximum = 65000 };
             m_Password = new TextBox { UseSystemPasswordChar = true };
             m_Cheats = new ToggleSwitch(L.Tr("Comandos de administrador"), L.Tr("Libera /give, /tp, /vehicle e outros comandos para você."));
             m_ShowConsole = new ToggleSwitch(L.Tr("Mostrar a janela do servidor"), L.Tr("Abre o console do servidor junto com o jogo."));
@@ -281,25 +282,21 @@ namespace Skalia.Launcher
             m_Welcome = new TextBox();
             AddField(server, L.Tr("Boas-vindas"), m_Welcome, L.Tr("Mensagem no chat quando alguém entra. Opcional."));
 
-            var rules = NewCard();
-            var first = true;
+            // Um assunto por card: bots, comportamento, cada grupo de regras e o servidor.
+            Stack(m_Advanced, bots);
+            Stack(m_Advanced, Spacer(14));
+            Stack(m_Advanced, behavior);
             foreach (var group in new[] { GameRules.World, GameRules.Survival, GameRules.Combat })
             {
-                if (!first)
-                {
-                    AddWide(rules, new Panel { Height = 14, Width = 10, BackColor = Theme.Card, Margin = new Padding(0) });
-                }
-                first = false;
+                var rules = NewCard();
                 AddSection(rules, L.Tr(group));
                 foreach (var rule in GameRules.All.Where(r => r.Group == group))
                 {
                     AddField(rules, L.Tr(rule.Title), RuleCombo(rule), L.Tr(rule.Hint));
                 }
+                Stack(m_Advanced, Spacer(14));
+                Stack(m_Advanced, rules);
             }
-
-            Stack(m_Advanced, bots);
-            Stack(m_Advanced, Spacer(14));
-            Stack(m_Advanced, rules);
             Stack(m_Advanced, Spacer(14));
             Stack(m_Advanced, server);
             Stack(page, m_Advanced);
@@ -363,7 +360,7 @@ namespace Skalia.Launcher
                     AddWide(card, toggle);
                     continue;
                 }
-                var combo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+                var combo = new DarkComboBox();
                 foreach (var choice in option.Choices)
                 {
                     combo.Items.Add(new Choice(choice.Key, L.Tr(choice.Value)));
@@ -436,6 +433,7 @@ namespace Skalia.Launcher
                 Font = new Font("Consolas", 9.5f),
                 WordWrap = false,
             };
+            Theme.DarkScrollbars(m_Log);
             var logHost = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Sidebar, Padding = new Padding(12) };
             logHost.Controls.Add(m_Log);
             var bottom = new Panel { Dock = DockStyle.Bottom, Height = 54, BackColor = Theme.Window, Padding = new Padding(0, 14, 0, 0) };
@@ -450,9 +448,21 @@ namespace Skalia.Launcher
 
         // ------------------------------------------------------------ helpers
 
+        private const int MaxContentWidth = 720;
+
         private Panel NewPage(string title, string subtitle)
         {
             var outer = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Window, AutoScroll = true, Padding = new Padding(36, 28, 36, 0) };
+            Theme.DarkScrollbars(outer);
+            // Conteudo com largura maxima: em janela larga sobra espaco a direita, nao no meio dos cards.
+            outer.Resize += (s, e) =>
+            {
+                var right = Math.Max(36, outer.ClientSize.Width - 36 - MaxContentWidth);
+                if (outer.Padding.Right != right)
+                {
+                    outer.Padding = new Padding(36, 28, right, 0);
+                }
+            };
             var stack = new Panel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, BackColor = Theme.Window };
             outer.Controls.Add(stack);
             Stack(stack, PageTitle(title, subtitle));
@@ -502,9 +512,14 @@ namespace Skalia.Launcher
         {
             var row = grid.RowCount++;
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(new Label { UseMnemonic = false, Text = label, AutoSize = true, ForeColor = Theme.Muted, Font = Theme.Regular(10.5f), Margin = new Padding(0, 10, 12, 6) }, 0, row);
+            grid.Controls.Add(new Label { UseMnemonic = false, Text = label, AutoSize = true, ForeColor = Theme.Muted, Font = Theme.Regular(10.5f), Margin = new Padding(0, 11, 12, 6) }, 0, row);
             Theme.StyleInput(control);
-            control.Width = control is NumericUpDown ? 120 : 380;
+            var width = control is NumberBox ? 120 : 380;
+            if (control is TextBox box)
+            {
+                control = new InputFrame(box);
+            }
+            control.Width = width;
             control.Margin = new Padding(0, 6, 0, 6);
             if (hint == null)
             {
@@ -532,7 +547,7 @@ namespace Skalia.Launcher
 
         private ComboBox RuleCombo(GameRule rule)
         {
-            var combo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+            var combo = new DarkComboBox();
             combo.Items.AddRange(rule.Options.Cast<object>().ToArray());
             combo.SelectedIndex = 0;
             m_RuleCombos[rule.Id] = combo;
@@ -804,7 +819,7 @@ namespace Skalia.Launcher
             m_Settings.Save(m_Paths.SettingsFile);
         }
 
-        private static decimal Clamp(int value, NumericUpDown box) => Math.Max(box.Minimum, Math.Min(box.Maximum, value));
+        private static decimal Clamp(int value, NumberBox box) => Math.Max(box.Minimum, Math.Min(box.Maximum, value));
 
         // ================================================================ actions
 

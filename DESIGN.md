@@ -170,7 +170,7 @@ Todo texto passa por `L.Tr()`. Inglês é o padrão e português (Brasil) é opc
 ## Layout
 
 - Janela com **sidebar fixa de 250px** à esquerda: logo, navegação (3 itens), idioma, status do servidor e o botão principal no rodapé. O botão de jogar fica sempre no mesmo lugar, em qualquer página.
-- Conteúdo com margem de **36px** nas laterais e **28px** no topo; cards empilhados verticalmente, com 14 a 28px entre eles conforme a hierarquia. Dentro do card, o espaçamento interno é de 24px nas laterais e 18px em cima e embaixo.
+- Conteúdo com margem de **36px** nas laterais e **28px** no topo, e **largura máxima de 720px** (em janela larga sobra espaço à direita, não no meio dos cards); cards empilhados verticalmente, com 14 a 28px entre eles conforme a hierarquia. Dentro do card, o espaçamento interno é de 24px nas laterais e 18px em cima e embaixo.
 - Dentro do card, grade de duas colunas: rótulo (~190px) e controle (até ~380px). Campos largos (lista de nomes, IDs da Workshop) ocupam a linha toda.
 - Página mais longa que a janela rola; a sidebar nunca rola.
 - Escala de espaçamento: 4, 8, 12, 18, 24 (mais 14 e 28 entre blocos). Use o mesmo degrau para coisas da mesma hierarquia e um degrau acima para separar grupos.
@@ -204,8 +204,9 @@ Todos desenhados à mão em `Theme.cs` (WinForms, `UserPaint`), sem estilos padr
 - **FlatButton** → `@src/Skalia.Launcher/Theme.cs#FlatButton` (`button-primary`, `button-secondary`). Desativado enquanto a ação não é possível (ex.: JOIN GAME só libera com o servidor pronto).
 - **NavButton** → `@src/Skalia.Launcher/Theme.cs#NavButton` (`nav-item`). O selecionado ganha fundo `card`, texto `text` e uma barrinha vertical de 3px em `accent` à esquerda, que marca a página atual.
 - **ToggleSwitch** → `@src/Skalia.Launcher/Theme.cs#ToggleSwitch` (`toggle-on`, `toggle-off`). Rótulo ao lado e dica opcional embaixo; é o controle para qualquer opção liga/desliga.
-- **Combos e campos** → `Theme.StyleInput` (`input`). Combo com lista desenhada no tema escuro.
-- **Card** → `MainForm.NewCard` (`card`). Um assunto por card, com título opcional.
+- **Combos e campos** → `Theme.StyleInput` (`input`). `DarkComboBox` desenha o combo fechado inteiro (fundo, borda de 1px, seta em chevron); `InputFrame` dá a borda de 1px às caixas de texto no lugar da borda nativa; `NumberBox` substitui o NumericUpDown (sem setinhas nativas; seta para cima/baixo muda o valor). A borda clareia para `muted` no foco, nunca para `accent`.
+- **Peças do Windows** → barras de rolagem e barra de título no modo escuro do próprio Windows 10/11 (`Theme.DarkScrollbars`, `Theme.DarkTitleBar`). Nada de controle nativo claro na tela.
+- **Card** → `MainForm.NewCard` (`card`). Um assunto por card, com título opcional. Em "Advanced settings" cada grupo (Bots, Bot behavior, World, Survival, Combat, Server) é um card.
 - **Seção recolhível** → "Advanced settings": texto `muted` com seta, fechado por padrão.
 
 ## Do's and Don'ts

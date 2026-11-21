@@ -1,5 +1,7 @@
 using System;
 using System.Drawing;
+using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
@@ -37,6 +39,42 @@ namespace Skalia.Launcher
             return path;
         }
 
+        [DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
+        private static extern int SetWindowTheme(IntPtr hwnd, string appName, string idList);
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
+        /// <summary>Barras de rolagem escuras do Windows 10/11 (sem efeito em sistemas sem o tema).</summary>
+        public static void DarkScrollbars(Control control)
+        {
+            EventHandler apply = (s, e) =>
+            {
+                try { SetWindowTheme(control.Handle, "DarkMode_Explorer", null); } catch { }
+            };
+            if (control.IsHandleCreated) apply(null, EventArgs.Empty);
+            control.HandleCreated += apply;
+        }
+
+        /// <summary>Barra de titulo escura (Windows 10 20H1+ e 11).</summary>
+        public static void DarkTitleBar(Form form)
+        {
+            EventHandler apply = (s, e) =>
+            {
+                try
+                {
+                    var on = 1;
+                    if (DwmSetWindowAttribute(form.Handle, 20, ref on, sizeof(int)) != 0)
+                    {
+                        DwmSetWindowAttribute(form.Handle, 19, ref on, sizeof(int));
+                    }
+                }
+                catch { }
+            };
+            if (form.IsHandleCreated) apply(null, EventArgs.Empty);
+            form.HandleCreated += apply;
+        }
+
         public static void StyleInput(Control control)
         {
             control.BackColor = Input;
@@ -44,17 +82,19 @@ namespace Skalia.Launcher
             control.Font = Regular(10.5f);
             if (control is TextBox box)
             {
-                box.BorderStyle = BorderStyle.FixedSingle;
-            }
-            if (control is NumericUpDown number)
-            {
-                number.BorderStyle = BorderStyle.FixedSingle;
+                // A borda vem do InputFrame; a do Windows e clara demais no tema escuro.
+                box.BorderStyle = BorderStyle.None;
+                if (box.Multiline)
+                {
+                    DarkScrollbars(box);
+                }
             }
             if (control is ComboBox combo)
             {
+                DarkScrollbars(combo);
                 combo.FlatStyle = FlatStyle.Flat;
                 combo.DrawMode = DrawMode.OwnerDrawFixed;
-                combo.ItemHeight = 24;
+                combo.ItemHeight = 22;
                 combo.DrawItem += (s, e) =>
                 {
                     if (e.Index < 0)
@@ -244,6 +284,139 @@ namespace Skalia.Launcher
                 {
                     TextRenderer.DrawText(e.Graphics, Hint, small, new Point(52, 29), Theme.Muted);
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Moldura de campo de texto: fundo input, borda de 1px (clareia no foco) e respiro interno,
+    /// no lugar da borda nativa do TextBox.
+    /// </summary>
+    internal sealed class InputFrame : Panel
+    {
+        private readonly TextBox m_Box;
+        private bool m_Focused;
+
+        public InputFrame(TextBox box)
+        {
+            m_Box = box;
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
+            BackColor = Theme.Input;
+            Padding = box.Multiline ? new Padding(8, 6, 2, 6) : new Padding(8, 0, 8, 0);
+            box.Dock = box.Multiline ? DockStyle.Fill : DockStyle.None;
+            Controls.Add(box);
+            Height = box.Multiline ? Math.Max(box.Height, 60) : 28;
+            box.GotFocus += (s, e) => { m_Focused = true; Invalidate(); };
+            box.LostFocus += (s, e) => { m_Focused = false; Invalidate(); };
+            Click += (s, e) => box.Focus();
+            Cursor = Cursors.IBeam;
+        }
+
+        public TextBox Box => m_Box;
+
+        protected override void OnLayout(LayoutEventArgs e)
+        {
+            base.OnLayout(e);
+            if (!m_Box.Multiline)
+            {
+                m_Box.SetBounds(Padding.Left, (Height - m_Box.Height) / 2, Width - Padding.Horizontal, m_Box.Height);
+            }
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.Clear(Theme.Input);
+            using (var pen = new Pen(m_Focused ? Theme.Muted : Theme.InputBorder))
+            {
+                e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+            }
+        }
+    }
+
+    /// <summary>Campo numerico simples (so digitos), sem as setinhas nativas do NumericUpDown.</summary>
+    internal sealed class NumberBox : TextBox
+    {
+        public decimal Minimum { get; set; }
+        public decimal Maximum { get; set; } = 100;
+
+        public decimal Value
+        {
+            get
+            {
+                decimal.TryParse(Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v);
+                return Math.Max(Minimum, Math.Min(Maximum, v));
+            }
+            set { Text = Math.Max(Minimum, Math.Min(Maximum, value)).ToString("0", CultureInfo.InvariantCulture); }
+        }
+
+        protected override void OnKeyPress(KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+            {
+                e.Handled = true;
+            }
+            base.OnKeyPress(e);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            // Setas mudam o valor, como no NumericUpDown.
+            if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
+            {
+                Value += e.KeyCode == Keys.Up ? 1 : -1;
+                SelectionStart = Text.Length;
+                e.Handled = true;
+            }
+            base.OnKeyDown(e);
+        }
+
+        protected override void OnValidating(System.ComponentModel.CancelEventArgs e)
+        {
+            Value = Value;
+            base.OnValidating(e);
+        }
+    }
+
+    /// <summary>
+    /// ComboBox de lista fechada desenhado inteiro no tema: fundo input, borda de 1px e seta em chevron.
+    /// A lista aberta continua nativa, com os itens desenhados por Theme.StyleInput.
+    /// </summary>
+    internal sealed class DarkComboBox : ComboBox
+    {
+        private bool m_Hover;
+
+        public DarkComboBox()
+        {
+            DropDownStyle = ComboBoxStyle.DropDownList;
+            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+        }
+
+        protected override void OnMouseEnter(EventArgs e) { m_Hover = true; Invalidate(); base.OnMouseEnter(e); }
+        protected override void OnMouseLeave(EventArgs e) { m_Hover = false; Invalidate(); base.OnMouseLeave(e); }
+        protected override void OnGotFocus(EventArgs e) { Invalidate(); base.OnGotFocus(e); }
+        protected override void OnLostFocus(EventArgs e) { Invalidate(); base.OnLostFocus(e); }
+        protected override void OnSelectedIndexChanged(EventArgs e) { Invalidate(); base.OnSelectedIndexChanged(e); }
+        protected override void OnEnabledChanged(EventArgs e) { Invalidate(); base.OnEnabledChanged(e); }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            var back = !Enabled ? Theme.Card : m_Hover ? Theme.Hover : Theme.Input;
+            g.Clear(back);
+            using (var pen = new Pen(Focused || DroppedDown ? Theme.Muted : Theme.InputBorder))
+            {
+                g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+            }
+            var fore = Enabled ? Theme.Text : Theme.Muted;
+            var text = SelectedIndex >= 0 ? GetItemText(SelectedItem) : "";
+            TextRenderer.DrawText(g, text, Font, new Rectangle(9, 0, Width - 36, Height), fore,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            var cx = Width - 16;
+            var cy = Height / 2;
+            using (var pen = new Pen(Enabled ? Theme.Muted : Theme.InputBorder, 1.6f))
+            {
+                g.DrawLines(pen, new[] { new PointF(cx - 4, cy - 2), new PointF(cx, cy + 2), new PointF(cx + 4, cy - 2) });
             }
         }
     }
