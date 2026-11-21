@@ -300,6 +300,12 @@ namespace SkaliaDeps
             {
                 return false;
             }
+            // 0.1.0-y17.28: a man seen up high and still is where he was:
+            // round to a flank he does not see coming (SkaliaBotPvpFlankY).
+            if (seen && TryStartPvpFlank(position, meters, now, name))
+            {
+                return false;
+            }
             // 0.1.0-y17: the round came from a man it never placed: hidden
             // from that side, watching it (SkaliaBotShotSectorY).
             // 0.1.0-y17.1: not when the hit came from a man it had found
