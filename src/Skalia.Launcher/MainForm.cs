@@ -29,12 +29,12 @@ namespace Skalia.Launcher
         private readonly List<NavButton> m_Nav = new List<NavButton>();
         private readonly List<Control> m_Pages = new List<Control>();
         private readonly List<ToggleSwitch> m_PluginToggles = new List<ToggleSwitch>();
-        private readonly Dictionary<string, ComboBox> m_RuleCombos = new Dictionary<string, ComboBox>();
+        private readonly Dictionary<string, Dropdown> m_RuleCombos = new Dictionary<string, Dropdown>();
         private readonly Dictionary<string, Control> m_PluginControls = new Dictionary<string, Control>();
 
         private Panel m_Content;
         private TextBox m_Name, m_Welcome, m_Password, m_BotNames, m_Workshop, m_Log;
-        private ComboBox m_Map, m_Difficulty, m_Perspective;
+        private Dropdown m_Map, m_Difficulty, m_Perspective;
         private NumberBox m_MaxPlayers, m_Port, m_BotCount;
         private ToggleSwitch m_PvP, m_Cheats, m_ShowConsole, m_AutoCallBots, m_BotLogs;
         private Panel m_Dev;
@@ -43,7 +43,10 @@ namespace Skalia.Launcher
         private Panel m_Advanced;
         private Label m_AdvancedHeader;
         private FlatButton m_PlayButton, m_StopButton;
-        private Label m_Status, m_StatusDetail;
+        private StatusLine m_Status;
+        private Label m_StatusDetail;
+        private Panel m_Footer, m_StopGap;
+        private bool? m_FooterRunning;
 
         private long m_LogPosition;
         private bool m_WasReady;
@@ -127,36 +130,39 @@ namespace Skalia.Launcher
 
         private Control BuildSidebar()
         {
+            // Tudo na barra lateral comeca em x = 24 (texto do menu incluso).
+            const int padX = 24;
             var sidebar = new Panel { Dock = DockStyle.Left, Width = 250, BackColor = Theme.Sidebar };
 
-            var brand = new Panel { Dock = DockStyle.Top, Height = 150, BackColor = Theme.Sidebar };
-            var logo = new PictureBox
+            var brand = new Panel { Dock = DockStyle.Top, Height = 156, BackColor = Theme.Sidebar };
+            brand.Controls.Add(new PictureBox
             {
                 Image = LoadLogo(),
                 SizeMode = PictureBoxSizeMode.Zoom,
-                Location = new Point(24, 26),
+                Location = new Point(padX, 28),
                 Size = new Size(150, 46),
                 BackColor = Theme.Sidebar,
-            };
-            brand.Controls.Add(logo);
+            });
             brand.Controls.Add(new Label
             {
+                UseMnemonic = false,
                 Text = "SKALIA",
                 Font = Theme.Bold(22f),
                 ForeColor = Theme.Text,
                 AutoSize = true,
-                Location = new Point(20, 78),
+                Location = new Point(padX - 2, 80),
             });
             brand.Controls.Add(new Label
             {
+                UseMnemonic = false,
                 Text = L.Tr("Unturned offline com bots"),
                 Font = Theme.Regular(9.5f),
                 ForeColor = Theme.Muted,
                 AutoSize = true,
-                Location = new Point(24, 118),
+                Location = new Point(padX - 1, 120),
             });
 
-            var nav = new Panel { Dock = DockStyle.Top, Height = 190, BackColor = Theme.Sidebar, Padding = new Padding(0, 8, 0, 0) };
+            var nav = new Panel { Dock = DockStyle.Top, Height = 4 * 42 + 8, BackColor = Theme.Sidebar, Padding = new Padding(0, 8, 0, 0) };
             var labels = new[] { L.Tr("Servidor"), L.Tr("Jogabilidade"), L.Tr("Plugins e Workshop"), L.Tr("Console") };
             for (var i = 0; i < labels.Length; i++)
             {
@@ -168,33 +174,35 @@ namespace Skalia.Launcher
                 button.BringToFront();
             }
 
-            var footer = new Panel { Dock = DockStyle.Bottom, Height = 196, BackColor = Theme.Sidebar, Padding = new Padding(20, 0, 20, 22) };
+            m_Footer = new Panel { Dock = DockStyle.Bottom, BackColor = Theme.Sidebar, Padding = new Padding(padX, 0, padX, 24) };
             m_StopButton = new FlatButton(L.Tr("Salvar e parar servidor"), false) { Dock = DockStyle.Bottom };
             m_StopButton.Click += (s, e) => StopServer();
+            m_StopGap = new Panel { Dock = DockStyle.Bottom, Height = 8, BackColor = Theme.Sidebar };
             m_PlayButton = new FlatButton(L.Tr("JOGAR"), true) { Dock = DockStyle.Bottom };
             m_PlayButton.Click += (s, e) => Play();
-            m_StatusDetail = new Label { Dock = DockStyle.Bottom, Height = 34, ForeColor = Theme.Muted, Font = Theme.Regular(9f) };
-            m_Status = new Label { Dock = DockStyle.Bottom, Height = 26, Font = Theme.Semibold(10.5f), ForeColor = Theme.Muted };
+            m_StatusDetail = new Label { UseMnemonic = false, Dock = DockStyle.Bottom, Height = 36, ForeColor = Theme.Muted, Font = Theme.Regular(9f), Padding = new Padding(16, 2, 0, 0) };
+            m_Status = new StatusLine { Dock = DockStyle.Bottom, Height = 22 };
             // Dock Bottom: o ultimo adicionado fica mais embaixo.
-            footer.Controls.Add(m_Status);
-            footer.Controls.Add(m_StatusDetail);
-            footer.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 12, BackColor = Theme.Sidebar });
-            footer.Controls.Add(m_PlayButton);
-            footer.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 10, BackColor = Theme.Sidebar });
-            footer.Controls.Add(m_StopButton);
+            m_Footer.Controls.Add(m_Status);
+            m_Footer.Controls.Add(m_StatusDetail);
+            m_Footer.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 8, BackColor = Theme.Sidebar });
+            m_Footer.Controls.Add(m_PlayButton);
+            m_Footer.Controls.Add(m_StopGap);
+            m_Footer.Controls.Add(m_StopButton);
+            m_FooterRunning = null;
+            UpdateFooter(false);
 
-            var language = new Panel { Dock = DockStyle.Bottom, Height = 64, BackColor = Theme.Sidebar, Padding = new Padding(20, 0, 20, 12) };
-            var languageBox = new DarkComboBox { Dock = DockStyle.Bottom };
-            Theme.StyleInput(languageBox);
+            var language = new Panel { Dock = DockStyle.Bottom, Height = 20 + 4 + Theme.InputHeight + 24, BackColor = Theme.Sidebar, Padding = new Padding(padX, 0, padX, 24) };
+            var languageBox = new Dropdown { Dock = DockStyle.Bottom };
             languageBox.Items.Add(new Choice(L.English, "English"));
             languageBox.Items.Add(new Choice(L.Portuguese, "Português (Brasil)"));
             languageBox.SelectedIndex = L.IsPortuguese ? 1 : 0;
             languageBox.SelectedIndexChanged += (s, e) => ChangeLanguage(((Choice)languageBox.SelectedItem).Value);
-            language.Controls.Add(new Label { UseMnemonic = false, Text = L.Tr("Idioma"), Dock = DockStyle.Bottom, Height = 22, ForeColor = Theme.Muted, Font = Theme.Regular(9f) });
+            language.Controls.Add(new Label { UseMnemonic = false, Text = L.Tr("Idioma"), Dock = DockStyle.Bottom, Height = 24, ForeColor = Theme.Muted, Font = Theme.Regular(9f), Padding = new Padding(0, 0, 0, 4), TextAlign = ContentAlignment.BottomLeft });
             language.Controls.Add(languageBox);
 
             sidebar.Controls.Add(language);
-            sidebar.Controls.Add(footer);
+            sidebar.Controls.Add(m_Footer);
             sidebar.Controls.Add(nav);
             sidebar.Controls.Add(brand);
             nav.BringToFront();
@@ -206,8 +214,8 @@ namespace Skalia.Launcher
             var page = NewPage(L.Tr("Servidor"), L.Tr("Escolha o mapa e clique em JOGAR. O resto já vem pronto."));
 
             m_Name = new TextBox();
-            m_Map = new DarkComboBox();
-            m_Difficulty = new DarkComboBox();
+            m_Map = new Dropdown();
+            m_Difficulty = new Dropdown();
             m_Difficulty.Items.AddRange(new object[]
             {
                 new Choice("Easy", L.Tr("Fácil")),
@@ -227,19 +235,8 @@ namespace Skalia.Launcher
             AddWide(basic, m_PvP);
             Stack(page, basic);
 
-            Stack(page, Spacer(18));
-            m_AdvancedHeader = new Label
-            {
-                Dock = DockStyle.Top,
-                Height = 36,
-                Font = Theme.Semibold(11f),
-                ForeColor = Theme.Muted,
-                Cursor = Cursors.Hand,
-                TextAlign = ContentAlignment.MiddleLeft,
-            };
-            m_AdvancedHeader.Click += (s, e) => SetAdvancedVisible(!m_Advanced.Visible);
-            m_AdvancedHeader.MouseEnter += (s, e) => m_AdvancedHeader.ForeColor = Theme.Text;
-            m_AdvancedHeader.MouseLeave += (s, e) => m_AdvancedHeader.ForeColor = Theme.Muted;
+            Stack(page, Spacer(SectionGap));
+            m_AdvancedHeader = CollapsibleHeader(() => SetAdvancedVisible(!m_Advanced.Visible));
             Stack(page, m_AdvancedHeader);
 
             m_Advanced = new Panel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, BackColor = Theme.Window };
@@ -251,14 +248,14 @@ namespace Skalia.Launcher
             AddSection(bots, L.Tr("Bots"));
             AddField(bots, L.Tr("Quantidade"), m_BotCount);
             AddField(bots, L.Tr("Nomes"), m_BotNames, L.Tr("Um por linha. Vazio = nomes gerados automaticamente."));
-            AddWide(bots, m_AutoCallBots);
             AddPluginOptions(bots, PluginOptions.Bots);
+            AddWide(bots, m_AutoCallBots);
             var behavior = NewCard();
             AddSection(behavior, L.Tr(PluginOptions.BotBehavior));
             AddPluginOptions(behavior, PluginOptions.BotBehavior);
 
             m_MaxPlayers = new NumberBox { Minimum = 1, Maximum = 200 };
-            m_Perspective = new DarkComboBox();
+            m_Perspective = new Dropdown();
             m_Perspective.Items.AddRange(new object[]
             {
                 new Choice("Both", L.Tr("Primeira e terceira pessoa")),
@@ -276,15 +273,15 @@ namespace Skalia.Launcher
             AddField(server, L.Tr("Câmera"), m_Perspective);
             AddField(server, L.Tr("Porta"), m_Port, L.Tr("Mude só se outro programa já usa esta porta."));
             AddField(server, L.Tr("Senha"), m_Password, L.Tr("Opcional, para amigos na mesma rede."));
+            m_Welcome = new TextBox();
+            AddField(server, L.Tr("Boas-vindas"), m_Welcome, L.Tr("Mensagem no chat quando alguém entra. Opcional."));
+            // Campos primeiro, interruptores depois, como nos outros cards.
             AddWide(server, m_Cheats);
             AddWide(server, m_ShowConsole);
 
-            m_Welcome = new TextBox();
-            AddField(server, L.Tr("Boas-vindas"), m_Welcome, L.Tr("Mensagem no chat quando alguém entra. Opcional."));
-
             // Um assunto por card: bots, comportamento, cada grupo de regras e o servidor.
             Stack(m_Advanced, bots);
-            Stack(m_Advanced, Spacer(14));
+            Stack(m_Advanced, Spacer(CardGap));
             Stack(m_Advanced, behavior);
             foreach (var group in new[] { GameRules.World, GameRules.Survival, GameRules.Combat })
             {
@@ -294,26 +291,17 @@ namespace Skalia.Launcher
                 {
                     AddField(rules, L.Tr(rule.Title), RuleCombo(rule), L.Tr(rule.Hint));
                 }
-                Stack(m_Advanced, Spacer(14));
+                Stack(m_Advanced, Spacer(CardGap));
                 Stack(m_Advanced, rules);
             }
-            Stack(m_Advanced, Spacer(14));
+            Stack(m_Advanced, Spacer(CardGap));
             Stack(m_Advanced, server);
+            // So aparece com a secao aberta: separa o ultimo card do titulo seguinte.
+            Stack(m_Advanced, Spacer(SectionGap - CardGap));
             Stack(page, m_Advanced);
 
-            Stack(page, Spacer(10));
-            m_DevHeader = new Label
-            {
-                Dock = DockStyle.Top,
-                Height = 36,
-                Font = Theme.Semibold(11f),
-                ForeColor = Theme.Muted,
-                Cursor = Cursors.Hand,
-                TextAlign = ContentAlignment.MiddleLeft,
-            };
-            m_DevHeader.Click += (s, e) => SetDevVisible(!m_Dev.Visible);
-            m_DevHeader.MouseEnter += (s, e) => m_DevHeader.ForeColor = Theme.Text;
-            m_DevHeader.MouseLeave += (s, e) => m_DevHeader.ForeColor = Theme.Muted;
+            Stack(page, Spacer(CardGap));
+            m_DevHeader = CollapsibleHeader(() => SetDevVisible(!m_Dev.Visible));
             Stack(page, m_DevHeader);
 
             m_Dev = new Panel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, BackColor = Theme.Window };
@@ -323,7 +311,7 @@ namespace Skalia.Launcher
             AddWide(dev, m_BotLogs);
             Stack(m_Dev, dev);
             Stack(page, m_Dev);
-            Stack(page, Spacer(28));
+            Stack(page, Spacer(PageBottom));
             SetAdvancedVisible(false);
             SetDevVisible(false);
             return page.Parent;
@@ -337,7 +325,7 @@ namespace Skalia.Launcher
             {
                 if (!first)
                 {
-                    Stack(page, Spacer(18));
+                    Stack(page, Spacer(CardGap));
                 }
                 first = false;
                 var card = NewCard();
@@ -345,7 +333,7 @@ namespace Skalia.Launcher
                 AddPluginOptions(card, group);
                 Stack(page, card);
             }
-            Stack(page, Spacer(28));
+            Stack(page, Spacer(PageBottom));
             return page.Parent;
         }
 
@@ -360,16 +348,14 @@ namespace Skalia.Launcher
                     AddWide(card, toggle);
                     continue;
                 }
-                var combo = new DarkComboBox();
+                var combo = new Dropdown();
                 foreach (var choice in option.Choices)
                 {
                     combo.Items.Add(new Choice(choice.Key, L.Tr(choice.Value)));
                 }
                 combo.SelectedIndex = 0;
-                combo.Width = 160;
                 m_PluginControls[option.Id] = combo;
                 AddField(card, L.Tr(option.Title), combo, option.Hint == null ? null : L.Tr(option.Hint));
-                combo.Width = 160;
             }
         }
 
@@ -401,25 +387,25 @@ namespace Skalia.Launcher
             AddSection(plugins, L.Tr("Plugins"));
             m_PluginList = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, BackColor = Theme.Card, Margin = new Padding(0) };
             AddWide(plugins, m_PluginList);
-            var openPlugins = new FlatButton(L.Tr("Abrir pasta de plugins"), false) { Width = 220 };
+            AddWide(plugins, Hint(L.Tr("Coloque a DLL de um plugin OpenMod na pasta de plugins e abra o SKALIA de novo.")));
+            var openPlugins = new FlatButton(L.Tr("Abrir pasta de plugins"), false) { Width = 220, Margin = new Padding(0, RowGap, 0, RowGap) };
             openPlugins.Click += (s, e) => OpenFolder(m_Paths.PluginsSourceDir);
             AddWide(plugins, openPlugins);
-            AddWide(plugins, Hint(L.Tr("Coloque a DLL de um plugin OpenMod nessa pasta e abra o SKALIA de novo.")));
             Stack(page, plugins);
 
-            Stack(page, Spacer(18));
+            Stack(page, Spacer(CardGap));
             m_Workshop = new TextBox { Multiline = true, Height = 110, ScrollBars = ScrollBars.Vertical };
             var workshop = NewCard();
             AddSection(workshop, L.Tr("Workshop"));
             AddField(workshop, L.Tr("IDs dos itens"), m_Workshop, L.Tr("Um por linha. Mapas da Workshop entram aqui sozinhos ao serem escolhidos."));
             Stack(page, workshop);
-            Stack(page, Spacer(28));
+            Stack(page, Spacer(PageBottom));
             return page.Parent;
         }
 
         private Control BuildConsolePage()
         {
-            var outer = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Window, Padding = new Padding(36, 28, 36, 28) };
+            var outer = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Window, Padding = new Padding(PagePadX, PagePadTop, PagePadX, PageBottom) };
             var title = PageTitle(L.Tr("Console"), L.Tr("O que o servidor está fazendo agora."));
             m_Log = new TextBox
             {
@@ -436,7 +422,7 @@ namespace Skalia.Launcher
             Theme.DarkScrollbars(m_Log);
             var logHost = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Sidebar, Padding = new Padding(12) };
             logHost.Controls.Add(m_Log);
-            var bottom = new Panel { Dock = DockStyle.Bottom, Height = 54, BackColor = Theme.Window, Padding = new Padding(0, 14, 0, 0) };
+            var bottom = new Panel { Dock = DockStyle.Bottom, Height = CardGap + 38, BackColor = Theme.Window, Padding = new Padding(0, CardGap, 0, 0) };
             var folder = new FlatButton(L.Tr("Abrir pasta do servidor"), false) { Dock = DockStyle.Left, Width = 220 };
             folder.Click += (s, e) => OpenFolder(m_Paths.ProfileDir);
             bottom.Controls.Add(folder);
@@ -448,21 +434,40 @@ namespace Skalia.Launcher
 
         // ------------------------------------------------------------ helpers
 
-        private const int MaxContentWidth = 720;
+        // Grade de espacamento (DESIGN.md): 4, 8, 12, 24 e as margens da pagina.
+        private const int PagePadX = 36;
+        private const int PagePadTop = 28;
+        private const int PageBottom = 32;
+        private const int CardGap = 12;
+        private const int SectionGap = 24;
+        private const int RowGap = 6;
+        private const int CardPadY = 14;
+        /// <summary>Card = respiro + rotulo + campo + respiro; a pagina nunca fica mais larga que isso.</summary>
+        private const int MaxContentWidth = Theme.CardPadX * 2 + Theme.LabelWidth + Theme.FieldWidth;
+        private const int WideWidth = Theme.LabelWidth + Theme.FieldWidth;
 
         private Panel NewPage(string title, string subtitle)
         {
-            var outer = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Window, AutoScroll = true, Padding = new Padding(36, 28, 36, 0) };
+            var outer = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Window, AutoScroll = true, Padding = new Padding(PagePadX, PagePadTop, PagePadX, 0) };
             Theme.DarkScrollbars(outer);
             // Conteudo com largura maxima: em janela larga sobra espaco a direita, nao no meio dos cards.
-            outer.Resize += (s, e) =>
+            // Recalcula tambem quando a barra de rolagem aparece (ela come largura sem mudar o tamanho da janela).
+            EventHandler fit = (s, e) =>
             {
-                var right = Math.Max(36, outer.ClientSize.Width - 36 - MaxContentWidth);
+                var client = outer.ClientSize.Width;
+                if (outer.VerticalScroll.Visible && client == outer.Width)
+                {
+                    client -= SystemInformation.VerticalScrollBarWidth;
+                }
+                var right = Math.Max(PagePadX, client - PagePadX - MaxContentWidth);
                 if (outer.Padding.Right != right)
                 {
-                    outer.Padding = new Padding(36, 28, right, 0);
+                    outer.Padding = new Padding(PagePadX, PagePadTop, right, 0);
                 }
             };
+            outer.Resize += fit;
+            outer.ClientSizeChanged += fit;
+            outer.Layout += (s, e) => fit(s, e);
             var stack = new Panel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, BackColor = Theme.Window };
             outer.Controls.Add(stack);
             Stack(stack, PageTitle(title, subtitle));
@@ -471,9 +476,34 @@ namespace Skalia.Launcher
 
         private static Control PageTitle(string title, string subtitle)
         {
-            var header = new Panel { Dock = DockStyle.Top, Height = 78, BackColor = Theme.Window };
-            header.Controls.Add(new Label { UseMnemonic = false, Text = title, Font = Theme.Bold(20f), ForeColor = Theme.Text, AutoSize = true, Location = new Point(-2, 0) });
-            header.Controls.Add(new Label { UseMnemonic = false, Text = subtitle, Font = Theme.Regular(10f), ForeColor = Theme.Muted, AutoSize = true, Location = new Point(0, 42) });
+            var titleFont = Theme.Bold(20f);
+            var subtitleFont = Theme.Regular(10f);
+            var titleHeight = TextRenderer.MeasureText("Ag", titleFont).Height;
+            var subtitleHeight = TextRenderer.MeasureText("Ag", subtitleFont).Height;
+            var header = new Panel { Dock = DockStyle.Top, Height = titleHeight + 4 + subtitleHeight + SectionGap, BackColor = Theme.Window };
+            // -3/-1: tira o respiro lateral que o TextRenderer poe antes da primeira letra.
+            header.Controls.Add(new Label { UseMnemonic = false, Text = title, Font = titleFont, ForeColor = Theme.Text, AutoSize = true, Location = new Point(-3, 0) });
+            header.Controls.Add(new Label { UseMnemonic = false, Text = subtitle, Font = subtitleFont, ForeColor = Theme.Muted, AutoSize = true, Location = new Point(-1, titleHeight + 4) });
+            return header;
+        }
+
+        /// <summary>Titulo clicavel de secao recolhivel ("Advanced settings", "Developer").</summary>
+        private static Label CollapsibleHeader(Action toggle)
+        {
+            var header = new Label
+            {
+                UseMnemonic = false,
+                Dock = DockStyle.Top,
+                Height = 32,
+                Font = Theme.Semibold(10.5f),
+                ForeColor = Theme.Muted,
+                Cursor = Cursors.Hand,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(0, 0, 0, 4),
+            };
+            header.Click += (s, e) => toggle();
+            header.MouseEnter += (s, e) => header.ForeColor = Theme.Text;
+            header.MouseLeave += (s, e) => header.ForeColor = Theme.Muted;
             return header;
         }
 
@@ -486,6 +516,10 @@ namespace Skalia.Launcher
 
         private static Panel Spacer(int height) => new Panel { Dock = DockStyle.Top, Height = height, BackColor = Theme.Window };
 
+        /// <summary>
+        /// Card de duas colunas (rotulo | campo). Cada linha tem RowGap em cima e embaixo, entao
+        /// linhas ficam a 12px uma da outra e o conteudo a CardPadY + RowGap = 20px da borda.
+        /// </summary>
         private static TableLayoutPanel NewCard()
         {
             var grid = new TableLayoutPanel
@@ -495,16 +529,16 @@ namespace Skalia.Launcher
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 ColumnCount = 2,
                 BackColor = Theme.Card,
-                Padding = new Padding(24, 18, 24, 18),
+                Padding = new Padding(Theme.CardPadX, CardPadY, Theme.CardPadX, CardPadY),
             };
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 190));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, Theme.LabelWidth));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             return grid;
         }
 
         private static void AddSection(TableLayoutPanel grid, string title)
         {
-            var label = new Label { UseMnemonic = false, Text = title, Font = Theme.Semibold(10.5f), ForeColor = Theme.Text, AutoSize = true, Margin = new Padding(0, 0, 0, 10) };
+            var label = new Label { UseMnemonic = false, Text = title, Font = Theme.Semibold(10.5f), ForeColor = Theme.Text, AutoSize = true, Margin = new Padding(0, RowGap, 0, 8) };
             AddWide(grid, label);
         }
 
@@ -512,23 +546,35 @@ namespace Skalia.Launcher
         {
             var row = grid.RowCount++;
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(new Label { UseMnemonic = false, Text = label, AutoSize = true, ForeColor = Theme.Muted, Font = Theme.Regular(10.5f), Margin = new Padding(0, 11, 12, 6) }, 0, row);
+            var labelFont = Theme.Regular(10.5f);
+            // Rotulo centrado na altura do campo; quebra a linha se for longo demais para a coluna.
+            var labelTop = RowGap + Math.Max(0, (Theme.InputHeight - TextRenderer.MeasureText("Ag", labelFont).Height) / 2);
+            grid.Controls.Add(new Label
+            {
+                UseMnemonic = false,
+                Text = label,
+                AutoSize = true,
+                ForeColor = Theme.Muted,
+                Font = labelFont,
+                Margin = new Padding(0, labelTop, 12, RowGap),
+                MaximumSize = new Size(Theme.LabelWidth - 12, 0),
+            }, 0, row);
             Theme.StyleInput(control);
-            var width = control is NumberBox ? 120 : 380;
             if (control is TextBox box)
             {
                 control = new InputFrame(box);
             }
-            control.Width = width;
-            control.Margin = new Padding(0, 6, 0, 6);
+            control.Width = Theme.FieldWidth;
             if (hint == null)
             {
+                control.Margin = new Padding(0, RowGap, 0, RowGap);
                 grid.Controls.Add(control, 1, row);
                 return;
             }
-            var cell = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, AutoSize = true, WrapContents = false, BackColor = Theme.Card, Margin = new Padding(0) };
+            control.Margin = new Padding(0);
+            var cell = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, AutoSize = true, WrapContents = false, BackColor = Theme.Card, Margin = new Padding(0, RowGap, 0, RowGap) };
             cell.Controls.Add(control);
-            cell.Controls.Add(new Label { UseMnemonic = false, Text = hint, AutoSize = true, ForeColor = Theme.Muted, Font = Theme.Regular(9f), Margin = new Padding(0, 0, 0, 6), MaximumSize = new Size(420, 0) });
+            cell.Controls.Add(new Label { UseMnemonic = false, Text = hint, AutoSize = true, ForeColor = Theme.Muted, Font = Theme.Regular(9f), Margin = new Padding(0, 4, 0, 0), MaximumSize = new Size(Theme.FieldWidth, 0) });
             grid.Controls.Add(cell, 1, row);
         }
 
@@ -538,23 +584,27 @@ namespace Skalia.Launcher
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             if (control is ToggleSwitch)
             {
-                control.Width = 520;
-                control.Margin = new Padding(0, 6, 0, 4);
+                control.Width = WideWidth;
+                control.Margin = new Padding(0, RowGap, 0, RowGap);
+            }
+            else if (control is FlowLayoutPanel)
+            {
+                control.Margin = new Padding(0);
             }
             grid.Controls.Add(control, 0, row);
             grid.SetColumnSpan(control, 2);
         }
 
-        private ComboBox RuleCombo(GameRule rule)
+        private Dropdown RuleCombo(GameRule rule)
         {
-            var combo = new DarkComboBox();
+            var combo = new Dropdown();
             combo.Items.AddRange(rule.Options.Cast<object>().ToArray());
             combo.SelectedIndex = 0;
             m_RuleCombos[rule.Id] = combo;
             return combo;
         }
 
-        private static Label Hint(string text) => new Label { UseMnemonic = false, Text = text, AutoSize = true, ForeColor = Theme.Muted, Font = Theme.Regular(9f), Margin = new Padding(0, 8, 0, 0) };
+        private static Label Hint(string text) => new Label { UseMnemonic = false, Text = text, AutoSize = true, ForeColor = Theme.Muted, Font = Theme.Regular(9f), Margin = new Padding(0, RowGap, 0, RowGap), MaximumSize = new Size(WideWidth, 0) };
 
         private void AddPage(Control page)
         {
@@ -677,7 +727,7 @@ namespace Skalia.Launcher
                 {
                     toggle.Checked = value == "true";
                 }
-                else if (control is ComboBox combo)
+                else if (control is Dropdown combo)
                 {
                     var match = combo.Items.Cast<Choice>().FirstOrDefault(c => c.Value == value);
                     if (match != null)
@@ -714,8 +764,8 @@ namespace Skalia.Launcher
                     Checked = !m_Settings.DisabledPlugins.Contains(plugin, StringComparer.OrdinalIgnoreCase),
                 };
                 toggle.Tag = plugin;
-                toggle.Width = 520;
-                toggle.Margin = new Padding(0, 4, 0, 4);
+                toggle.Width = WideWidth;
+                toggle.Margin = new Padding(0, RowGap, 0, RowGap);
                 m_PluginToggles.Add(toggle);
                 m_PluginList.Controls.Add(toggle);
             }
@@ -726,14 +776,14 @@ namespace Skalia.Launcher
             m_Workshop.Text = string.Join(Environment.NewLine, m_Settings.WorkshopIds);
         }
 
-        private static void SelectChoice(ComboBox combo, string value, string fallback)
+        private static void SelectChoice(Dropdown combo, string value, string fallback)
         {
             var choices = combo.Items.Cast<Choice>().ToList();
             combo.SelectedItem = choices.FirstOrDefault(c => string.Equals(c.Value, value, StringComparison.OrdinalIgnoreCase))
                 ?? choices.First(c => c.Value == fallback);
         }
 
-        private static string ChoiceValue(ComboBox combo, string fallback) => (combo.SelectedItem as Choice)?.Value ?? fallback;
+        private static string ChoiceValue(Dropdown combo, string fallback) => (combo.SelectedItem as Choice)?.Value ?? fallback;
 
         private void ReloadMaps()
         {
@@ -779,7 +829,7 @@ namespace Skalia.Launcher
                 {
                     m_Settings.PluginOptions[pair.Key] = toggle.Checked ? "true" : "false";
                 }
-                else if (pair.Value is ComboBox combo && combo.SelectedItem is Choice choice)
+                else if (pair.Value is Dropdown combo && combo.SelectedItem is Choice choice)
                 {
                     m_Settings.PluginOptions[pair.Key] = choice.Value;
                 }
@@ -936,7 +986,7 @@ namespace Skalia.Launcher
 
             m_PlayButton.Text = ready ? L.Tr("ENTRAR NO JOGO") : L.Tr("JOGAR");
             m_PlayButton.Enabled = !running || ready;
-            m_StopButton.Visible = running;
+            UpdateFooter(running);
             m_StopButton.Text = stopping && (DateTime.UtcNow - m_StopRequestedAt).TotalSeconds > 45
                 ? L.Tr("Encerrar à força") : L.Tr("Salvar e parar servidor");
             TailServerLog();
@@ -944,9 +994,27 @@ namespace Skalia.Launcher
 
         private void SetStatus(string text, Color color, string detail)
         {
-            m_Status.Text = "●  " + text;
-            m_Status.ForeColor = color;
+            m_Status.Text = text;
+            m_Status.DotColor = color;
             m_StatusDetail.Text = detail;
+        }
+
+        /// <summary>O botao de parar so existe com o servidor ligado; o rodape encolhe sem ele.</summary>
+        private void UpdateFooter(bool running)
+        {
+            if (m_FooterRunning == running)
+            {
+                return;
+            }
+            m_FooterRunning = running;
+            m_StopButton.Visible = running;
+            m_StopGap.Visible = running;
+            var height = m_Status.Height + m_StatusDetail.Height + 8 + m_PlayButton.Height + m_Footer.Padding.Bottom;
+            if (running)
+            {
+                height += m_StopGap.Height + m_StopButton.Height;
+            }
+            m_Footer.Height = height;
         }
 
         private void TailServerLog()

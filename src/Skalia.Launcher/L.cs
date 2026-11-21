@@ -115,6 +115,7 @@ namespace Skalia.Launcher
             { "Organizando os arquivos do servidor.", "Setting up the server files." },
             { "Pacotes do OpenMod reaproveitados.", "OpenMod packages reused." },
             { "Padrão da dificuldade", "Difficulty default" },
+            { "Coloque a DLL de um plugin OpenMod na pasta de plugins e abra o SKALIA de novo.", "Put an OpenMod plugin DLL in the plugins folder and open SKALIA again." },
             { "Não foi possível trocar o idioma das mensagens do jogo: ", "Could not switch the language of the in-game messages: " },
             { "Jogabilidade", "Gameplay" },
             { "Comandos e regras extras que vêm com o SKALIA.", "Extra commands and rules that come with SKALIA." },

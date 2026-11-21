@@ -71,7 +71,13 @@ spacing:
   xl: 24px
   page-x: 36px
   page-top: 28px
-  sidebar-x: 20px
+  page-bottom: 32px
+  sidebar-x: 24px
+  card-x: 24px
+  card-y: 20px
+  row-gap: 12px
+  card-gap: 12px
+  section-gap: 24px
 components:
   sidebar:
     backgroundColor: "{colors.sidebar}"
@@ -95,6 +101,7 @@ components:
     textColor: "{colors.text}"
     typography: "{typography.body}"
     height: 28px
+    width: 370px
   button-primary:
     backgroundColor: "{colors.accent}"
     textColor: "{colors.on-accent}"
@@ -169,11 +176,15 @@ Todo texto passa por `L.Tr()`. Inglês é o padrão e português (Brasil) é opc
 
 ## Layout
 
-- Janela com **sidebar fixa de 250px** à esquerda: logo, navegação (3 itens), idioma, status do servidor e o botão principal no rodapé. O botão de jogar fica sempre no mesmo lugar, em qualquer página.
-- Conteúdo com margem de **36px** nas laterais e **28px** no topo, e **largura máxima de 720px** (em janela larga sobra espaço à direita, não no meio dos cards); cards empilhados verticalmente, com 14 a 28px entre eles conforme a hierarquia. Dentro do card, o espaçamento interno é de 24px nas laterais e 18px em cima e embaixo.
-- Dentro do card, grade de duas colunas: rótulo (~190px) e controle (até ~380px). Campos largos (lista de nomes, IDs da Workshop) ocupam a linha toda.
+Uma grade só, definida em `Theme.cs` e `MainForm.cs` (constantes `InputHeight`, `LabelWidth`, `FieldWidth`, `CardPadX`, `RowGap`, `CardGap`, `SectionGap`). Nada de número solto no meio do layout.
+
+- Janela com **sidebar fixa de 250px** à esquerda: logo, navegação (4 itens), idioma, status do servidor e o botão principal no rodapé. Tudo na sidebar começa em **x = 24**, inclusive o texto do menu. O botão de jogar fica sempre no mesmo lugar, em qualquer página; o rodapé encolhe quando o botão de parar some, sem deixar buraco.
+- Conteúdo com margem de **36px** nas laterais, **28px** no topo e **32px** no fim. A largura do conteúdo é a do card (**618px**): em janela larga sobra espaço à direita, nunca no meio dos cards. Isso vale também quando a barra de rolagem aparece.
+- **Card**: respiro de 24px nas laterais e 20px em cima e embaixo. Grade de duas colunas: rótulo (**200px**, quebra a linha se precisar) e campo (**370px**). Todo campo de uma linha (texto, número, lista) tem **28px de altura e 370px de largura**; caixas de várias linhas têm a mesma largura. Interruptores ocupam a linha toda (570px).
+- **Linhas**: 12px entre uma e outra. O rótulo fica centrado na altura do campo. A dica de um campo fica 4px abaixo dele; a de um interruptor, logo abaixo do título.
+- **Ordem dentro do card**: título, campos, interruptores. Exceção: um campo que depende de um interruptor vem logo abaixo dele (ex.: "Camas por jogador" abaixo de /home).
+- **Entre blocos**: 12px entre cards; 24px antes de um título de seção recolhível; o título recolhível tem 32px de altura.
 - Página mais longa que a janela rola; a sidebar nunca rola.
-- Escala de espaçamento: 4, 8, 12, 18, 24 (mais 14 e 28 entre blocos). Use o mesmo degrau para coisas da mesma hierarquia e um degrau acima para separar grupos.
 
 ## Elevation & Depth
 
@@ -204,7 +215,7 @@ Todos desenhados à mão em `Theme.cs` (WinForms, `UserPaint`), sem estilos padr
 - **FlatButton** → `@src/Skalia.Launcher/Theme.cs#FlatButton` (`button-primary`, `button-secondary`). Desativado enquanto a ação não é possível (ex.: JOIN GAME só libera com o servidor pronto).
 - **NavButton** → `@src/Skalia.Launcher/Theme.cs#NavButton` (`nav-item`). O selecionado ganha fundo `card`, texto `text` e uma barrinha vertical de 3px em `accent` à esquerda, que marca a página atual.
 - **ToggleSwitch** → `@src/Skalia.Launcher/Theme.cs#ToggleSwitch` (`toggle-on`, `toggle-off`). Rótulo ao lado e dica opcional embaixo; é o controle para qualquer opção liga/desliga.
-- **Combos e campos** → `Theme.StyleInput` (`input`). `DarkComboBox` desenha o combo fechado inteiro (fundo, borda de 1px, seta em chevron); `InputFrame` dá a borda de 1px às caixas de texto no lugar da borda nativa; `NumberBox` substitui o NumericUpDown (sem setinhas nativas; seta para cima/baixo muda o valor). A borda clareia para `muted` no foco, nunca para `accent`.
+- **Combos e campos** → `Theme.StyleInput` (`input`). `Dropdown` substitui o ComboBox: fechado é fundo input, borda de 1px e chevron; aberto é uma lista escura de linhas de 28px, até 10 linhas, com a opção atual marcada por uma barrinha `muted`; `InputFrame` dá a borda de 1px às caixas de texto no lugar da borda nativa; `NumberBox` substitui o NumericUpDown (sem setinhas nativas; seta para cima/baixo muda o valor). A borda clareia para `muted` no foco, nunca para `accent`.
 - **Peças do Windows** → barras de rolagem e barra de título no modo escuro do próprio Windows 10/11 (`Theme.DarkScrollbars`, `Theme.DarkTitleBar`). Nada de controle nativo claro na tela.
 - **Card** → `MainForm.NewCard` (`card`). Um assunto por card, com título opcional. Em "Advanced settings" cada grupo (Bots, Bot behavior, World, Survival, Combat, Server) é um card.
 - **Seção recolhível** → "Advanced settings": texto `muted` com seta, fechado por padrão.

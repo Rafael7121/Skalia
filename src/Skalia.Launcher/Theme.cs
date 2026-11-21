@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Drawing;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -22,6 +25,15 @@ namespace Skalia.Launcher
         public static readonly Color Muted = Color.FromArgb(146, 152, 166);
         public static readonly Color Good = Color.FromArgb(110, 207, 140);
         public static readonly Color Warn = Color.FromArgb(232, 184, 92);
+
+        /// <summary>Altura de todo campo de uma linha (texto, numero, lista).</summary>
+        public const int InputHeight = 28;
+        /// <summary>Coluna do rotulo e coluna do campo dentro do card.</summary>
+        public const int LabelWidth = 200;
+        public const int FieldWidth = 370;
+        /// <summary>Respiro interno do card (laterais e topo/base).</summary>
+        public const int CardPadX = 24;
+        public const int CardPadY = 20;
 
         public static Font Regular(float size = 10f) => new Font("Segoe UI", size, FontStyle.Regular);
         public static Font Semibold(float size = 10f) => new Font("Segoe UI Semibold", size, FontStyle.Regular);
@@ -88,28 +100,6 @@ namespace Skalia.Launcher
                 {
                     DarkScrollbars(box);
                 }
-            }
-            if (control is ComboBox combo)
-            {
-                DarkScrollbars(combo);
-                combo.FlatStyle = FlatStyle.Flat;
-                combo.DrawMode = DrawMode.OwnerDrawFixed;
-                combo.ItemHeight = 22;
-                combo.DrawItem += (s, e) =>
-                {
-                    if (e.Index < 0)
-                    {
-                        return;
-                    }
-                    var selected = (e.State & DrawItemState.Selected) != 0 && (e.State & DrawItemState.ComboBoxEdit) == 0;
-                    using (var back = new SolidBrush(selected ? Hover : Input))
-                    {
-                        e.Graphics.FillRectangle(back, e.Bounds);
-                    }
-                    TextRenderer.DrawText(e.Graphics, combo.GetItemText(combo.Items[e.Index]), combo.Font,
-                        new Rectangle(e.Bounds.X + 6, e.Bounds.Y, e.Bounds.Width - 6, e.Bounds.Height), Text,
-                        TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis);
-                };
             }
         }
     }
@@ -188,7 +178,7 @@ namespace Skalia.Launcher
         {
             e.Graphics.Clear(Theme.Sidebar);
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            var rect = new Rectangle(10, 2, Width - 21, Height - 5);
+            var rect = new Rectangle(12, 2, Width - 24, Height - 4);
             if (m_Selected || m_Hover)
             {
                 using (var path = Theme.Rounded(rect, 7))
@@ -201,10 +191,10 @@ namespace Skalia.Launcher
             {
                 using (var brush = new SolidBrush(Theme.Accent))
                 {
-                    e.Graphics.FillRectangle(brush, 10, rect.Y + 10, 3, rect.Height - 20);
+                    e.Graphics.FillRectangle(brush, rect.X, rect.Y + 10, 3, rect.Height - 20);
                 }
             }
-            TextRenderer.DrawText(e.Graphics, Text, Font, new Rectangle(rect.X + 16, rect.Y, rect.Width - 16, rect.Height),
+            TextRenderer.DrawText(e.Graphics, Text, Font, new Rectangle(rect.X + 10, rect.Y, rect.Width - 10, rect.Height),
                 m_Selected ? Theme.Text : Theme.Muted, TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.NoPrefix);
         }
     }
@@ -221,12 +211,15 @@ namespace Skalia.Launcher
         {
             Text = text;
             Hint = hint;
-            Height = hint == null ? 32 : 48;
             Cursor = Cursors.Hand;
             Font = Theme.Regular(10.5f);
+            // Linha do titulo com a altura de um campo (o trilho fica no meio dela); a dica vem logo abaixo.
+            Height = Theme.InputHeight + (hint == null ? 0 : TextRenderer.MeasureText("Ag", s_HintFont).Height);
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.ResizeRedraw | ControlStyles.SupportsTransparentBackColor, true);
             BackColor = Color.Transparent;
         }
+
+        private static readonly Font s_HintFont = Theme.Regular(9f);
 
         public string Hint { get; set; }
 
@@ -264,7 +257,9 @@ namespace Skalia.Launcher
         protected override void OnPaint(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            var track = new Rectangle(0, 6, 40, 22);
+            var hintHeight = string.IsNullOrEmpty(Hint) ? 0 : TextRenderer.MeasureText("Ag", s_HintFont).Height;
+            var line = Math.Max(22, Height - hintHeight);
+            var track = new Rectangle(0, (line - 22) / 2, 40, 22);
             var on = m_Checked || m_Locked;
             var trackColor = m_Locked ? Color.FromArgb(120, Theme.Accent) : on ? Theme.Accent : Color.FromArgb(62, 67, 79);
             using (var path = Theme.Rounded(track, 11))
@@ -277,14 +272,45 @@ namespace Skalia.Launcher
             {
                 e.Graphics.FillEllipse(brush, knobX, track.Y + 3, 16, 16);
             }
-            TextRenderer.DrawText(e.Graphics, Text, Font, new Point(52, 7), Theme.Text);
-            if (!string.IsNullOrEmpty(Hint))
+            const TextFormatFlags flags = TextFormatFlags.Left | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine;
+            TextRenderer.DrawText(e.Graphics, Text, Font, new Rectangle(52, 0, Width - 52, line), Theme.Text, flags | TextFormatFlags.VerticalCenter);
+            if (hintHeight > 0)
             {
-                using (var small = Theme.Regular(9f))
-                {
-                    TextRenderer.DrawText(e.Graphics, Hint, small, new Point(52, 29), Theme.Muted);
-                }
+                TextRenderer.DrawText(e.Graphics, Hint, s_HintFont, new Rectangle(52, line - 3, Width - 52, hintHeight), Theme.Muted, flags);
             }
+        }
+    }
+
+    /// <summary>Status do servidor na barra lateral: bolinha na cor do estado e texto normal.</summary>
+    internal sealed class StatusLine : Control
+    {
+        private Color m_DotColor = Theme.Muted;
+
+        public StatusLine()
+        {
+            Font = Theme.Semibold(10.5f);
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
+            BackColor = Theme.Sidebar;
+        }
+
+        public Color DotColor
+        {
+            get => m_DotColor;
+            set { m_DotColor = value; Invalidate(); }
+        }
+
+        protected override void OnTextChanged(EventArgs e) { Invalidate(); base.OnTextChanged(e); }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.Clear(BackColor);
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using (var brush = new SolidBrush(m_DotColor))
+            {
+                e.Graphics.FillEllipse(brush, 0, Height / 2f - 4, 8, 8);
+            }
+            TextRenderer.DrawText(e.Graphics, Text, Font, new Rectangle(14, 0, Width - 14, Height), Theme.Text,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);
         }
     }
 
@@ -300,12 +326,13 @@ namespace Skalia.Launcher
         public InputFrame(TextBox box)
         {
             m_Box = box;
+            var multilineHeight = Math.Max(box.Height, 60);
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
             BackColor = Theme.Input;
             Padding = box.Multiline ? new Padding(8, 6, 2, 6) : new Padding(8, 0, 8, 0);
             box.Dock = box.Multiline ? DockStyle.Fill : DockStyle.None;
             Controls.Add(box);
-            Height = box.Multiline ? Math.Max(box.Height, 60) : 28;
+            Height = box.Multiline ? multilineHeight : Theme.InputHeight;
             box.GotFocus += (s, e) => { m_Focused = true; Invalidate(); };
             box.LostFocus += (s, e) => { m_Focused = false; Invalidate(); };
             Click += (s, e) => box.Focus();
@@ -378,46 +405,331 @@ namespace Skalia.Launcher
     }
 
     /// <summary>
-    /// ComboBox de lista fechada desenhado inteiro no tema: fundo input, borda de 1px e seta em chevron.
-    /// A lista aberta continua nativa, com os itens desenhados por Theme.StyleInput.
+    /// Lista de escolha desenhada inteira no tema (substitui o ComboBox, cuja altura e seta
+    /// mudam conforme o Windows). Fechada: fundo input, borda de 1px e chevron. Aberta: lista
+    /// escura logo abaixo, ate 10 linhas, com rolagem escura.
     /// </summary>
-    internal sealed class DarkComboBox : ComboBox
+    internal sealed class Dropdown : Control
     {
-        private bool m_Hover;
-
-        public DarkComboBox()
+        public sealed class ItemCollection : Collection<object>
         {
-            DropDownStyle = ComboBoxStyle.DropDownList;
-            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            private readonly Dropdown m_Owner;
+
+            internal ItemCollection(Dropdown owner) { m_Owner = owner; }
+
+            public void AddRange(IEnumerable<object> items)
+            {
+                foreach (var item in items)
+                {
+                    Add(item);
+                }
+            }
+
+            protected override void InsertItem(int index, object item) { base.InsertItem(index, item); m_Owner.Invalidate(); }
+            protected override void SetItem(int index, object item) { base.SetItem(index, item); m_Owner.Invalidate(); }
+
+            protected override void RemoveItem(int index)
+            {
+                base.RemoveItem(index);
+                if (m_Owner.m_Index >= Count)
+                {
+                    m_Owner.SelectedIndex = Count - 1;
+                }
+                m_Owner.Invalidate();
+            }
+
+            protected override void ClearItems()
+            {
+                base.ClearItems();
+                m_Owner.SelectedIndex = -1;
+            }
+        }
+
+        private const int RowHeight = 28;
+        private const int MaxRows = 10;
+
+        private int m_Index = -1;
+        private bool m_Hover;
+        // Uma lista por controle, reaproveitada. Nao e descartada a mao: no Mono, descartar um
+        // ToolStripDropDown recem-fechado derruba o loop de mensagens.
+        private ToolStripDropDown m_Popup;
+        private bool m_Open;
+        private int m_ClosedAt;
+
+        public event EventHandler SelectedIndexChanged;
+
+        public Dropdown()
+        {
+            Items = new ItemCollection(this);
+            Height = Theme.InputHeight;
+            Font = Theme.Regular(10.5f);
+            BackColor = Theme.Input;
+            ForeColor = Theme.Text;
+            Cursor = Cursors.Hand;
+            TabStop = true;
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint
+                | ControlStyles.ResizeRedraw | ControlStyles.Selectable, true);
+        }
+
+        public ItemCollection Items { get; }
+
+        public bool DroppedDown => m_Open;
+
+        public int SelectedIndex
+        {
+            get => m_Index;
+            set
+            {
+                var index = value < -1 || value >= Items.Count ? -1 : value;
+                if (index == m_Index)
+                {
+                    return;
+                }
+                m_Index = index;
+                Invalidate();
+                SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        public object SelectedItem
+        {
+            get => m_Index >= 0 && m_Index < Items.Count ? Items[m_Index] : null;
+            set => SelectedIndex = value == null ? -1 : Items.IndexOf(value);
+        }
+
+        protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
+        {
+            // Altura fixa, igual a dos campos de texto.
+            base.SetBoundsCore(x, y, width, Theme.InputHeight, specified);
         }
 
         protected override void OnMouseEnter(EventArgs e) { m_Hover = true; Invalidate(); base.OnMouseEnter(e); }
         protected override void OnMouseLeave(EventArgs e) { m_Hover = false; Invalidate(); base.OnMouseLeave(e); }
         protected override void OnGotFocus(EventArgs e) { Invalidate(); base.OnGotFocus(e); }
         protected override void OnLostFocus(EventArgs e) { Invalidate(); base.OnLostFocus(e); }
-        protected override void OnSelectedIndexChanged(EventArgs e) { Invalidate(); base.OnSelectedIndexChanged(e); }
         protected override void OnEnabledChanged(EventArgs e) { Invalidate(); base.OnEnabledChanged(e); }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            if (e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+            Focus();
+            // O clique que fecha a lista tambem chega aqui; nao reabre na mesma hora.
+            if (unchecked(Environment.TickCount - m_ClosedAt) > 200)
+            {
+                Open();
+            }
+        }
+
+        protected override bool IsInputKey(Keys keyData)
+        {
+            switch (keyData & Keys.KeyCode)
+            {
+                case Keys.Up:
+                case Keys.Down:
+                    return true;
+            }
+            return base.IsInputKey(keyData);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if ((e.Alt && e.KeyCode == Keys.Down) || e.KeyCode == Keys.F4 || e.KeyCode == Keys.Space || e.KeyCode == Keys.Enter)
+            {
+                Open();
+                e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.Down && m_Index < Items.Count - 1)
+            {
+                SelectedIndex = m_Index + 1;
+                e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.Up && m_Index > 0)
+            {
+                SelectedIndex = m_Index - 1;
+                e.Handled = true;
+            }
+        }
+
+        private void Open()
+        {
+            if (m_Open || Items.Count == 0 || !Enabled)
+            {
+                return;
+            }
+            var hover = -1;
+            var list = new ListBox
+            {
+                BorderStyle = BorderStyle.None,
+                DrawMode = DrawMode.OwnerDrawFixed,
+                ItemHeight = RowHeight,
+                IntegralHeight = false,
+                BackColor = Theme.Input,
+                ForeColor = Theme.Text,
+                Font = Font,
+                Size = new Size(Width - 2, Math.Min(Items.Count, MaxRows) * RowHeight),
+            };
+            foreach (var item in Items)
+            {
+                list.Items.Add(item);
+            }
+            list.SelectedIndex = m_Index;
+            Theme.DarkScrollbars(list);
+            list.DrawItem += (s, e) =>
+            {
+                if (e.Index < 0)
+                {
+                    return;
+                }
+                var current = e.Index == m_Index;
+                var highlighted = e.Index == hover || (hover < 0 && (e.State & DrawItemState.Selected) != 0);
+                using (var back = new SolidBrush(highlighted ? Theme.Hover : Theme.Input))
+                {
+                    e.Graphics.FillRectangle(back, e.Bounds);
+                }
+                if (current)
+                {
+                    using (var mark = new SolidBrush(Theme.Muted))
+                    {
+                        e.Graphics.FillRectangle(mark, e.Bounds.X, e.Bounds.Y + 8, 2, e.Bounds.Height - 16);
+                    }
+                }
+                TextRenderer.DrawText(e.Graphics, Convert.ToString(list.Items[e.Index]), Font,
+                    new Rectangle(e.Bounds.X + 9, e.Bounds.Y, e.Bounds.Width - 12, e.Bounds.Height),
+                    current ? Theme.Text : Theme.Muted,
+                    TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
+            };
+            list.MouseMove += (s, e) =>
+            {
+                var index = list.IndexFromPoint(e.Location);
+                if (index != hover)
+                {
+                    hover = index;
+                    list.Invalidate();
+                }
+            };
+            list.MouseClick += (s, e) => Choose(list.IndexFromPoint(e.Location));
+            list.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Space)
+                {
+                    Choose(list.SelectedIndex);
+                    e.Handled = true;
+                }
+                else if (e.KeyCode == Keys.Escape)
+                {
+                    m_Popup.Close();
+                    e.Handled = true;
+                }
+                else if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
+                {
+                    hover = -1;
+                }
+            };
+
+            var host = new ToolStripControlHost(list) { Margin = Padding.Empty, Padding = Padding.Empty, AutoSize = false, Size = list.Size };
+            if (m_Popup == null)
+            {
+                m_Popup = new ToolStripDropDown
+                {
+                    Padding = new Padding(1),
+                    Renderer = new PopupRenderer(),
+                    DropShadowEnabled = false,
+                };
+                m_Popup.Closed += (s, e) =>
+                {
+                    m_Open = false;
+                    m_ClosedAt = Environment.TickCount;
+                    if (!IsDisposed)
+                    {
+                        Invalidate();
+                    }
+                };
+            }
+            var previous = m_Popup.Items.Cast<ToolStripItem>().ToList();
+            m_Popup.Items.Clear();
+            foreach (var item in previous)
+            {
+                item.Dispose(); // a lista da abertura anterior (o host descarta o ListBox junto)
+            }
+            m_Popup.Items.Add(host);
+            m_Open = true;
+            m_Popup.Show(this, new Point(0, Height));
+            if (m_Index >= 0)
+            {
+                list.TopIndex = Math.Max(0, m_Index - MaxRows / 2);
+            }
+            list.Focus();
+            Invalidate();
+        }
+
+        private void Choose(int index)
+        {
+            m_Popup.Close();
+            if (IsDisposed)
+            {
+                return;
+            }
+            Focus();
+            if (index >= 0 && index < Items.Count && index != m_Index)
+            {
+                // A troca pode reconstruir a tela (idioma); deixa a lista terminar de fechar antes.
+                BeginInvoke(new Action(() =>
+                {
+                    if (!IsDisposed)
+                    {
+                        SelectedIndex = index;
+                    }
+                }));
+            }
+        }
 
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
-            var back = !Enabled ? Theme.Card : m_Hover ? Theme.Hover : Theme.Input;
+            var back = !Enabled ? Theme.Card : m_Hover || DroppedDown ? Theme.Hover : Theme.Input;
             g.Clear(back);
-            using (var pen = new Pen(Focused || DroppedDown ? Theme.Muted : Theme.InputBorder))
+            using (var pen = new Pen(Enabled && (Focused || DroppedDown) ? Theme.Muted : Theme.InputBorder))
             {
                 g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
             }
             var fore = Enabled ? Theme.Text : Theme.Muted;
-            var text = SelectedIndex >= 0 ? GetItemText(SelectedItem) : "";
+            var text = Convert.ToString(SelectedItem) ?? "";
             TextRenderer.DrawText(g, text, Font, new Rectangle(9, 0, Width - 36, Height), fore,
                 TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            var cx = Width - 16;
-            var cy = Height / 2;
+            var cx = Width - 16f;
+            var cy = Height / 2f;
             using (var pen = new Pen(Enabled ? Theme.Muted : Theme.InputBorder, 1.6f))
             {
-                g.DrawLines(pen, new[] { new PointF(cx - 4, cy - 2), new PointF(cx, cy + 2), new PointF(cx + 4, cy - 2) });
+                if (DroppedDown)
+                {
+                    g.DrawLines(pen, new[] { new PointF(cx - 4, cy + 2), new PointF(cx, cy - 2), new PointF(cx + 4, cy + 2) });
+                }
+                else
+                {
+                    g.DrawLines(pen, new[] { new PointF(cx - 4, cy - 2), new PointF(cx, cy + 2), new PointF(cx + 4, cy - 2) });
+                }
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && m_Open)
+            {
+                m_Popup.Close();
+            }
+            base.Dispose(disposing);
+        }
+
+        private sealed class PopupRenderer : ToolStripRenderer
+        {
+            protected override void OnRenderToolStripBackground(ToolStripRenderEventArgs e) => e.Graphics.Clear(Theme.Muted);
+            protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e) { }
         }
     }
 }

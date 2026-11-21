@@ -54,9 +54,9 @@ namespace Skalia.Launcher
             Pick(World, new[] { "groundCleanup:intervalSeconds" }, "Limpeza a cada", null, "600",
                 new[] { "groundCleanup:enabled" }, C("300", "5 min"), C("600", "10 min"), C("1200", "20 min"), C("1800", "30 min")),
 
-            Toggle(Bots, "serverBot:movement:enabled", "Bots andam pelo mapa", "Desligado, os bots ficam parados.", true),
             Pick(Bots, new[] { "serverBot:respawnDelaySeconds" }, "Bots renascem em", null, "3",
                 null, C("3", "3 s"), C("10", "10 s"), C("30", "30 s"), C("60", "60 s")),
+            Toggle(Bots, "serverBot:movement:enabled", "Bots andam pelo mapa", "Desligado, os bots ficam parados.", true),
 
             Toggle(BotBehavior, "serverBot:behavior:meleeAimVariation", "Golpes variam a mira", "Desligado, todo golpe vai na cabeça.", true),
             Toggle(BotBehavior, "serverBot:behavior:hordeCaution", "Cautela na horda", "Ferido no meio da horda, agacha e luta só com o que está perto.", true),
