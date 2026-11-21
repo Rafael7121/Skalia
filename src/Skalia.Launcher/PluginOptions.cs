@@ -46,7 +46,6 @@ namespace Skalia.Launcher
                 new[] { "vault:enabled" }, C("4", "4 x 4"), C("6", "6 x 6"), C("8", "8 x 8")),
             Toggle(Commands, "inventorySort:commandEnabled", "Organizar inventário (/sort)", "Arruma os itens da mochila com um comando.", true),
 
-            Toggle(World, "spawnLoadouts:enabled", "Kit inicial", "Roupas e itens ao nascer, nos mapas que têm kit.", true),
             Toggle(World, "automaticReload:enabled", "Recarga automática", "Põe outro pente compatível quando a arma esvazia.", true),
             Toggle(World, "zombieSpawns:guaranteeMegas", "Mega Zombies garantidos", "Sempre um Mega por região; volta 10 min depois de morrer.", false),
             Toggle(World, "alicepackRewards:enabled", "Mochila dos Mega Zombies", "Todo Mega Zombie derruba Alicepacks ao morrer.", true),
@@ -198,5 +197,228 @@ namespace Skalia.Launcher
         {
             Group = group, Paths = paths, Title = title, Hint = hint, Default = def, DependsOn = dependsOn, Choices = choices,
         };
+    }
+
+    /// <summary>
+    /// Kit inicial por mapa (spawnLoadouts:maps:&lt;mapa&gt; do SKALIA DEPS), editado como texto:
+    /// um item por linha, "ID x2" para quantidade, "ID/ID/ID" sorteia um, "#" comenta.
+    /// Roupas sao vestidas e armas vao para as maos; o resto vai para a mochila.
+    /// </summary>
+    internal static class StartingKits
+    {
+        /// <summary>Kits que ja vinham no plugin; aparecem como exemplo ate o jogador mudar.</summary>
+        public static readonly Dictionary<string, string> Defaults = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "California2", "4234/4235/4236/4237/4238/4239/4240/4241\n4301\n4400" },
+            { "Arid Reborn", "19160\n19190\n19053 x2\n19633" },
+            { "Washington", "183\n2\n13\n14" },
+        };
+
+        private static readonly Regex LineRegex = new Regex(@"^(\d+(?:\s*/\s*\d+)*)\s*(?:x\s*(\d+))?$", RegexOptions.IgnoreCase);
+
+        /// <summary>Texto salvo para o mapa, ou o kit de exemplo, ou vazio.</summary>
+        public static string TextFor(IDictionary<string, string> saved, string map)
+        {
+            if (string.IsNullOrEmpty(map))
+            {
+                return "";
+            }
+            if (saved != null)
+            {
+                foreach (var pair in saved)
+                {
+                    if (string.Equals(pair.Key, map, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return pair.Value ?? "";
+                    }
+                }
+            }
+            return Defaults.TryGetValue(map, out var text) ? text.Replace("\n", Environment.NewLine) : "";
+        }
+
+        public sealed class Entry
+        {
+            public ushort[] Ids;
+            public int Quantity;
+        }
+
+        /// <summary>Le o texto; linhas que nao entende vao para <paramref name="invalid"/>.</summary>
+        public static List<Entry> Parse(string text, List<string> invalid)
+        {
+            var entries = new List<Entry>();
+            foreach (var raw in (text ?? "").Split('\n'))
+            {
+                var line = raw;
+                var comment = line.IndexOf('#');
+                if (comment >= 0)
+                {
+                    line = line.Substring(0, comment);
+                }
+                line = line.Trim();
+                if (line.Length == 0)
+                {
+                    continue;
+                }
+                var m = LineRegex.Match(line);
+                var ok = m.Success;
+                ushort[] ids = null;
+                var quantity = 1;
+                if (ok)
+                {
+                    var parts = m.Groups[1].Value.Split('/').Select(part => part.Trim()).ToArray();
+                    ids = new ushort[parts.Length];
+                    for (var i = 0; i < parts.Length && ok; i++)
+                    {
+                        ok = ushort.TryParse(parts[i], out ids[i]) && ids[i] > 0;
+                    }
+                    if (ok && m.Groups[2].Success)
+                    {
+                        ok = int.TryParse(m.Groups[2].Value, out quantity) && quantity >= 1 && quantity <= 100;
+                    }
+                }
+                if (ok)
+                {
+                    entries.Add(new Entry { Ids = ids, Quantity = quantity });
+                }
+                else
+                {
+                    invalid?.Add(raw.Trim());
+                }
+            }
+            return entries;
+        }
+
+        /// <summary>Troca o bloco do mapa dentro de spawnLoadouts:maps (cria o que faltar).</summary>
+        public static string Apply(string yaml, string map, string text, List<string> invalid)
+        {
+            var entries = Parse(text, invalid);
+            var newline = yaml.Contains("\r\n") ? "\r\n" : "\n";
+            var lines = yaml.Replace("\r\n", "\n").Split('\n').ToList();
+            var block = new List<string> { "    " + Quote(map) + ":", "      # SKALIA: kit do launcher (Jogabilidade > Kit inicial)." };
+            var fixedItems = entries.Where(e => e.Ids.Length == 1).ToList();
+            var randomItems = entries.Where(e => e.Ids.Length > 1).ToList();
+            if (fixedItems.Count == 0)
+            {
+                block.Add("      equipment: []");
+            }
+            else
+            {
+                block.Add("      equipment:");
+                foreach (var entry in fixedItems)
+                {
+                    block.Add("        - id: " + entry.Ids[0]);
+                    block.Add("          quantity: " + entry.Quantity);
+                    block.Add("          quality: 100");
+                }
+            }
+            if (randomItems.Count > 0)
+            {
+                block.Add("      randomEquipment:");
+                foreach (var entry in randomItems)
+                {
+                    block.Add("        - choices:");
+                    block.AddRange(entry.Ids.Select(id => "            - " + id));
+                    block.Add("          quantity: " + entry.Quantity);
+                    block.Add("          quality: 100");
+                }
+            }
+
+            var section = FindKey(lines, 0, lines.Count, 0, "spawnLoadouts");
+            if (section < 0)
+            {
+                while (lines.Count > 0 && lines[lines.Count - 1].Trim().Length == 0)
+                {
+                    lines.RemoveAt(lines.Count - 1);
+                }
+                lines.Add("");
+                lines.Add("spawnLoadouts:");
+                lines.Add("  enabled: true");
+                lines.Add("  maps:");
+                lines.AddRange(block);
+                lines.Add("");
+                return string.Join(newline, lines);
+            }
+            var sectionEnd = BlockEnd(lines, section, 0);
+            var maps = FindKey(lines, section + 1, sectionEnd, 2, "maps");
+            if (maps < 0)
+            {
+                lines.InsertRange(TrimBack(lines, section + 1, sectionEnd), new[] { "  maps:" }.Concat(block));
+                return string.Join(newline, lines);
+            }
+            var mapsEnd = BlockEnd(lines, maps, 2);
+            var existing = FindKey(lines, maps + 1, mapsEnd, 4, map);
+            if (existing < 0)
+            {
+                lines.InsertRange(TrimBack(lines, maps + 1, mapsEnd), block);
+            }
+            else
+            {
+                var end = TrimBack(lines, existing + 1, BlockEnd(lines, existing, 4));
+                lines.RemoveRange(existing, end - existing);
+                lines.InsertRange(existing, block);
+            }
+            return string.Join(newline, lines);
+        }
+
+        private static string Quote(string map) =>
+            Regex.IsMatch(map, @"^[A-Za-z0-9_][A-Za-z0-9_ .\-]*$") ? map : "\"" + map.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+
+        private static int FindKey(List<string> lines, int start, int end, int indent, string key)
+        {
+            var pad = new string(' ', indent);
+            for (var i = start; i < end; i++)
+            {
+                var line = lines[i];
+                if (!line.StartsWith(pad) || line.Length <= indent || line[indent] == ' ' || line[indent] == '#')
+                {
+                    continue;
+                }
+                var colon = line.IndexOf(':', indent);
+                if (colon < 0)
+                {
+                    continue;
+                }
+                var name = line.Substring(indent, colon - indent).Trim().Trim('"', '\'');
+                if (string.Equals(name, key, StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        /// <summary>Primeira linha depois de <paramref name="keyLine"/> com conteudo e indentacao &lt;= a dela.</summary>
+        private static int BlockEnd(List<string> lines, int keyLine, int indent)
+        {
+            for (var i = keyLine + 1; i < lines.Count; i++)
+            {
+                var trimmed = lines[i].TrimStart();
+                if (trimmed.Length == 0 || trimmed.StartsWith("#"))
+                {
+                    continue;
+                }
+                if (lines[i].Length - trimmed.Length <= indent)
+                {
+                    return i;
+                }
+            }
+            return lines.Count;
+        }
+
+        /// <summary>Recua sobre linhas em branco e comentarios do bloco seguinte.</summary>
+        private static int TrimBack(List<string> lines, int start, int end)
+        {
+            while (end > start)
+            {
+                var trimmed = lines[end - 1].Trim();
+                if (trimmed.Length == 0 || (trimmed.StartsWith("#") && lines[end - 1].Length - lines[end - 1].TrimStart().Length < 6))
+                {
+                    end--;
+                    continue;
+                }
+                break;
+            }
+            return end;
+        }
     }
 }

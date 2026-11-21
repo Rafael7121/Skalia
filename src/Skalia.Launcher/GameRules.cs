@@ -124,9 +124,10 @@ namespace Skalia.Launcher
         public static readonly GameRule[] All =
         {
             new GameRule("loot", Basic, "Quantidade de loot", null,
-                new[] { 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 10 },
+                new[] { 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 10, 25, 50, 100 },
                 new ScaledKey("Items/Spawn_Chance", 0.35, 0.35, 0.15, max: 1),
-                // Drop dos zumbis segue o mesmo multiplicador (10x = 10 itens por zumbi, 50 por Mega, 80-100 por chefe).
+                // Drop dos zumbis segue o mesmo multiplicador (10x = 10 itens por zumbi, 50 por Mega, 80-100 por chefe;
+                // 100x = 100 por zumbi). Os campos de drop do jogo sao uint, sem teto.
                 new ScaledKey("Zombies/Loot_Chance", 0.55, 0.5, 0.3, max: 1),
                 new ScaledKey("Zombies/Min_Drops", 1, 1, 1, integer: true, rounding: -1),
                 new ScaledKey("Zombies/Max_Drops", 1, 1, 1, integer: true, rounding: 1),

@@ -31,6 +31,9 @@ namespace Skalia.Launcher
         private readonly List<ToggleSwitch> m_PluginToggles = new List<ToggleSwitch>();
         private readonly Dictionary<string, Dropdown> m_RuleCombos = new Dictionary<string, Dropdown>();
         private readonly Dictionary<string, Control> m_PluginControls = new Dictionary<string, Control>();
+        private TextBox m_Kit;
+        private Label m_KitHint;
+        private string m_KitMap;
 
         private Panel m_Content;
         private TextBox m_Name, m_Welcome, m_Password, m_BotNames, m_Workshop, m_Log;
@@ -215,6 +218,7 @@ namespace Skalia.Launcher
 
             m_Name = new TextBox();
             m_Map = new Dropdown();
+            m_Map.SelectedIndexChanged += (s, e) => SwitchKitMap();
             m_Difficulty = new Dropdown();
             m_Difficulty.Items.AddRange(new object[]
             {
@@ -330,6 +334,12 @@ namespace Skalia.Launcher
                 first = false;
                 var card = NewCard();
                 AddSection(card, L.Tr(group));
+                if (group == PluginOptions.World)
+                {
+                    m_KitMap = null;
+                    m_Kit = new TextBox { Multiline = true, Height = 110, ScrollBars = ScrollBars.Vertical };
+                    m_KitHint = AddField(card, L.Tr("Kit inicial"), m_Kit, " ");
+                }
                 AddPluginOptions(card, group);
                 Stack(page, card);
             }
@@ -542,7 +552,8 @@ namespace Skalia.Launcher
             AddWide(grid, label);
         }
 
-        private static void AddField(TableLayoutPanel grid, string label, Control control, string hint = null)
+        /// <summary>Linha rotulo | campo. Devolve o rotulo da dica (ou null).</summary>
+        private static Label AddField(TableLayoutPanel grid, string label, Control control, string hint = null)
         {
             var row = grid.RowCount++;
             grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -569,13 +580,49 @@ namespace Skalia.Launcher
             {
                 control.Margin = new Padding(0, RowGap, 0, RowGap);
                 grid.Controls.Add(control, 1, row);
-                return;
+                return null;
             }
             control.Margin = new Padding(0);
             var cell = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, AutoSize = true, WrapContents = false, BackColor = Theme.Card, Margin = new Padding(0, RowGap, 0, RowGap) };
             cell.Controls.Add(control);
-            cell.Controls.Add(new Label { UseMnemonic = false, Text = hint, AutoSize = true, ForeColor = Theme.Muted, Font = Theme.Regular(9f), Margin = new Padding(0, 4, 0, 0), MaximumSize = new Size(Theme.FieldWidth, 0) });
+            var hintLabel = new Label { UseMnemonic = false, Text = hint, AutoSize = true, ForeColor = Theme.Muted, Font = Theme.Regular(9f), Margin = new Padding(0, 4, 0, 0), MaximumSize = new Size(Theme.FieldWidth, 0) };
+            cell.Controls.Add(hintLabel);
             grid.Controls.Add(cell, 1, row);
+            return hintLabel;
+        }
+
+        /// <summary>O kit inicial e por mapa: guarda o texto do mapa anterior e mostra o do novo.</summary>
+        private void SwitchKitMap()
+        {
+            if (m_Kit == null)
+            {
+                return;
+            }
+            StoreKit();
+            m_KitMap = (m_Map.SelectedItem as MapEntry)?.Name;
+            m_Kit.Text = StartingKits.TextFor(m_Settings.StartingKits, m_KitMap);
+            m_KitHint.Text = m_KitMap == null
+                ? L.Tr("Escolha um mapa na página Servidor.")
+                : L.Tr("Ao nascer em ") + m_KitMap + L.Tr(". Um ID por linha; \"ID x2\" dá 2 e \"ID/ID\" sorteia um. Vazio = sem kit.");
+        }
+
+        private void StoreKit()
+        {
+            if (m_Kit == null || m_KitMap == null)
+            {
+                return;
+            }
+            var text = m_Kit.Text.Replace("\r\n", "\n").Trim().Replace("\n", Environment.NewLine);
+            var saved = m_Settings.StartingKits.Keys.FirstOrDefault(k => string.Equals(k, m_KitMap, StringComparison.OrdinalIgnoreCase));
+            if (saved != null)
+            {
+                m_Settings.StartingKits.Remove(saved);
+            }
+            // Igual ao exemplo: nao guarda, para o mapa seguir o kit de exemplo.
+            if (text != StartingKits.TextFor(null, m_KitMap).Trim())
+            {
+                m_Settings.StartingKits[m_KitMap] = text;
+            }
         }
 
         private static void AddWide(TableLayoutPanel grid, Control control)
@@ -807,6 +854,7 @@ namespace Skalia.Launcher
             m_Settings.ServerName = string.IsNullOrWhiteSpace(m_Name.Text) ? "Server" : m_Name.Text.Trim();
             var map = m_Map.SelectedItem as MapEntry;
             m_Settings.Map = map?.Name ?? m_Settings.Map;
+            StoreKit();
             m_Settings.Difficulty = ChoiceValue(m_Difficulty, "Normal");
             m_Settings.PvP = m_PvP.Checked;
 

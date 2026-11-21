@@ -373,6 +373,14 @@ namespace Skalia.Launcher
             text = SetYamlKey(text, "serverBot", "botLogs", settings.BotLogs ? "true" : "false",
                 "# SKALIA: log detalhado dos bots (opcao Desenvolvedor do launcher). false = so avisos e erros.");
             text = PluginOptions.Apply(text, settings.PluginOptions);
+            // Kit inicial do mapa escolhido (vazio = sem kit); a chave geral fica sempre ligada.
+            text = PluginOptions.SetPath(text, "spawnLoadouts:enabled", "true");
+            var kitInvalid = new List<string>();
+            text = StartingKits.Apply(text, settings.Map, StartingKits.TextFor(settings.StartingKits, settings.Map), kitInvalid);
+            foreach (var line in kitInvalid)
+            {
+                m_Log(L.Tr("Kit inicial: linha ignorada, não é um ID de item: ") + line);
+            }
             // Dicas automaticas do chat eram de outro servidor (California 2, em portugues).
             text = PluginOptions.SetPath(text, "automaticMessages:enabled", "false");
             var factor = GameRules.LootSpawnFactor(settings.GameRules, settings.Difficulty)
