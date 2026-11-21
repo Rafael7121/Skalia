@@ -31,6 +31,8 @@ namespace Skalia.Launcher
         private readonly List<ToggleSwitch> m_PluginToggles = new List<ToggleSwitch>();
         private readonly Dictionary<string, Dropdown> m_RuleCombos = new Dictionary<string, Dropdown>();
         private readonly Dictionary<string, Control> m_PluginControls = new Dictionary<string, Control>();
+        private Dropdown m_BotProfile;
+        private bool m_ApplyingProfile;
         private TextBox m_Kit;
         private Label m_KitHint;
         private string m_KitMap;
@@ -257,8 +259,16 @@ namespace Skalia.Launcher
             AddPluginOptions(bots, PluginOptions.Bots);
             AddWide(bots, m_AutoCallBots);
             var behavior = NewCard();
-            AddSection(behavior, L.Tr(PluginOptions.BotBehavior));
-            AddPluginOptions(behavior, PluginOptions.BotBehavior);
+            AddSection(behavior, L.Tr(PluginOptions.BotDifficulty));
+            AddWide(behavior, Hint(L.Tr("Padrão é como os jogadores gravados jogam hoje, tudo em 1x. Mexer em um modificador vira Personalizado.")));
+            m_BotProfile = new Dropdown();
+            foreach (var profile in PluginOptions.BotProfiles)
+            {
+                m_BotProfile.Items.Add(new Choice(profile.Key, L.Tr(profile.Value)));
+            }
+            AddField(behavior, L.Tr("Perfil"), m_BotProfile);
+            AddPluginOptions(behavior, PluginOptions.BotDifficulty);
+            WireBotProfile();
 
             m_MaxPlayers = new NumberBox { Minimum = 1, Maximum = 200 };
             m_Perspective = new Dropdown();
@@ -354,7 +364,7 @@ namespace Skalia.Launcher
 
         private void AddPluginOptions(TableLayoutPanel card, string group)
         {
-            foreach (var option in PluginOptions.All.Where(o => o.Group == group))
+            foreach (var option in PluginOptions.All.Where(o => o.Group == group && !o.Fixed))
             {
                 if (option.IsToggle)
                 {
@@ -372,6 +382,55 @@ namespace Skalia.Launcher
                 m_PluginControls[option.Id] = combo;
                 AddField(card, L.Tr(option.Title), combo, option.Hint == null ? null : L.Tr(option.Hint));
             }
+        }
+
+        /// <summary>
+        /// Perfil de dificuldade dos bots: escolher um perfil preenche os modificadores; mexer num
+        /// modificador sem bater com nenhum perfil vira Personalizado.
+        /// </summary>
+        private void WireBotProfile()
+        {
+            var modifiers = PluginOptions.All.Where(o => o.Group == PluginOptions.BotDifficulty)
+                .Select(o => m_PluginControls[o.Id] as Dropdown).ToList();
+            m_BotProfile.SelectedIndexChanged += (s, e) =>
+            {
+                var chosen = (m_BotProfile.SelectedItem as Choice)?.Value;
+                if (m_ApplyingProfile || chosen == null || !PluginOptions.BotProfileValues.TryGetValue(chosen, out var values))
+                {
+                    return;
+                }
+                m_ApplyingProfile = true;
+                foreach (var pair in values)
+                {
+                    if (m_PluginControls.TryGetValue(pair.Key, out var control) && control is Dropdown combo)
+                    {
+                        combo.SelectedItem = combo.Items.Cast<Choice>().FirstOrDefault(c => c.Value == pair.Value) ?? combo.SelectedItem;
+                    }
+                }
+                m_ApplyingProfile = false;
+            };
+            foreach (var combo in modifiers)
+            {
+                combo.SelectedIndexChanged += (s, e) =>
+                {
+                    if (!m_ApplyingProfile)
+                    {
+                        SelectProfileFromModifiers();
+                    }
+                };
+            }
+        }
+
+        /// <summary>Marca o perfil que bate com os modificadores atuais, ou Personalizado.</summary>
+        private void SelectProfileFromModifiers()
+        {
+            var current = PluginOptions.All.Where(o => o.Group == PluginOptions.BotDifficulty)
+                .ToDictionary(o => o.Id, o => ((m_PluginControls[o.Id] as Dropdown)?.SelectedItem as Choice)?.Value);
+            var match = PluginOptions.BotProfileValues.FirstOrDefault(p => p.Value.All(v => current.TryGetValue(v.Key, out var c) && c == v.Value)).Key
+                ?? PluginOptions.CustomProfile;
+            m_ApplyingProfile = true;
+            m_BotProfile.SelectedItem = m_BotProfile.Items.Cast<Choice>().First(c => c.Value == match);
+            m_ApplyingProfile = false;
         }
 
         /// <summary>Campo que so vale com um toggle ligado (ex.: espera do teleporte) fica desativado sem ele.</summary>
@@ -789,6 +848,7 @@ namespace Skalia.Launcher
                     }
                 }
             }
+            SelectProfileFromModifiers();
 
             m_MaxPlayers.Value = Clamp(m_Settings.MaxPlayers, m_MaxPlayers);
             SelectChoice(m_Perspective, m_Settings.Perspective, "Both");

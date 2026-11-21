@@ -23,6 +23,8 @@ namespace Skalia.Launcher
         /// <summary>Id de um toggle: o campo fica desativado com ele desligado.</summary>
         public string[] DependsOn { get; set; }
         public bool IsToggle => Choices == null;
+        /// <summary>Nao aparece na tela; o launcher grava sempre o padrao.</summary>
+        public bool Fixed { get; set; }
     }
 
     internal static class PluginOptions
@@ -31,6 +33,9 @@ namespace Skalia.Launcher
         public const string World = "Mundo";
         public const string Bots = "Bots";
         public const string BotBehavior = "Comportamento dos bots";
+        public const string BotDifficulty = "Dificuldade dos bots";
+        /// <summary>Perfil mostrado quando os modificadores nao batem com nenhum perfil pronto.</summary>
+        public const string CustomProfile = "custom";
 
         public static readonly PluginOption[] All =
         {
@@ -57,19 +62,77 @@ namespace Skalia.Launcher
                 null, C("3", "3 s"), C("10", "10 s"), C("30", "30 s"), C("60", "60 s")),
             Toggle(Bots, "serverBot:movement:enabled", "Bots andam pelo mapa", "Desligado, os bots ficam parados.", true),
 
-            Toggle(BotBehavior, "serverBot:behavior:meleeAimVariation", "Golpes variam a mira", "Desligado, todo golpe vai na cabeça.", true),
-            Toggle(BotBehavior, "serverBot:behavior:hordeCaution", "Cautela na horda", "Ferido no meio da horda, agacha e luta só com o que está perto.", true),
-            Toggle(BotBehavior, "serverBot:behavior:lootLook", "Olhar antes de pegar", "Para meio segundo no item antes de pegar.", true),
-            Toggle(BotBehavior, "serverBot:behavior:humanTurning", "Giro natural", "Gira mais rápido nas viradas grandes, como um jogador.", true),
-            Toggle(BotBehavior, "serverBot:behavior:routeHops", "Atalhos ao ar livre", "Corta em linha reta quando a rota faz zigue-zague.", true),
-            Toggle(BotBehavior, "serverBot:behavior:freshDeathAvoidance", "Evitar onde um bot morreu", "Não pega loot perto de onde outro bot morreu há pouco.", true),
+            // Humanizacao vinda das gravacoes: desligar so deixava o bot mais robotico. Sempre ligadas.
+            Fixed(Toggle(BotBehavior, "serverBot:behavior:meleeAimVariation", null, null, true)),
+            Fixed(Toggle(BotBehavior, "serverBot:behavior:hordeCaution", null, null, true)),
+            Fixed(Toggle(BotBehavior, "serverBot:behavior:lootLook", null, null, true)),
+            Fixed(Toggle(BotBehavior, "serverBot:behavior:humanTurning", null, null, true)),
+            Fixed(Toggle(BotBehavior, "serverBot:behavior:routeHops", null, null, true)),
+            Fixed(Toggle(BotBehavior, "serverBot:behavior:freshDeathAvoidance", null, null, true)),
+
+            // Modificadores no estilo SPT: 1x = o comportamento tirado das gravacoes.
+            Pick(BotDifficulty, new[] { "serverBot:modifiers:visionRange" }, "Alcance de visão", "Distância em que percebem jogadores e zumbis.", "1", null, Times(0.5, 0.75, 1, 1.25, 1.5, 2)),
+            Pick(BotDifficulty, new[] { "serverBot:modifiers:fieldOfView" }, "Campo de visão", "Ângulo que enxergam, para os lados e para cima e baixo.", "1", null, Times(0.5, 0.75, 1, 1.25, 1.5)),
+            Pick(BotDifficulty, new[] { "serverBot:modifiers:hearing" }, "Audição", "Até onde ouvem tiros e balas passando perto.", "1", null, Times(0.5, 0.75, 1, 1.25, 1.5, 2)),
+            Pick(BotDifficulty, new[] { "serverBot:modifiers:reactionTime" }, "Tempo de reação", "Abaixo de 1x viram e atiram mais rápido.", "1", null, Times(0.25, 0.5, 0.75, 1, 1.25, 1.5, 2)),
+            Pick(BotDifficulty, new[] { "serverBot:modifiers:aimSpeed" }, "Velocidade da mira", "Acima de 1x travam no alvo mais rápido.", "1", null, Times(0.5, 0.75, 1, 1.25, 1.5, 2)),
+            Pick(BotDifficulty, new[] { "serverBot:modifiers:accuracy" }, "Precisão", "Acima de 1x a mira fecha mais.", "1", null, Times(0.5, 0.75, 1, 1.25, 1.5, 2)),
+            Pick(BotDifficulty, new[] { "serverBot:modifiers:courage" }, "Coragem", "Acima de 1x lutam com menos vida antes de fugir ou se curar.", "1", null, Times(0.5, 0.75, 1, 1.25, 1.5, 2)),
+            Pick(BotDifficulty, new[] { "serverBot:modifiers:fightDistance" }, "Distância de luta", "Acima de 1x preferem lutar mais de longe.", "1", null, Times(0.5, 0.75, 1, 1.25, 1.5, 2)),
+            Pick(BotDifficulty, new[] { "serverBot:modifiers:cover" }, "Uso de cobertura", "Acima de 1x se agacham e se escondem mais.", "1", null, Times(0.5, 0.75, 1, 1.25, 1.5, 2)),
+            Pick(BotDifficulty, new[] { "serverBot:modifiers:looting" }, "Vontade de saquear", "Acima de 1x param mais para pegar loot antes de lutar.", "1", null, Times(0.5, 0.75, 1, 1.25, 1.5, 2)),
         };
 
         public static PluginOption Find(string id) => All.FirstOrDefault(o => o.Id == id);
 
+        /// <summary>Perfis prontos de dificuldade: valor de cada modificador (o que faltar fica 1x).</summary>
+        public static readonly KeyValuePair<string, string>[] BotProfiles =
+        {
+            C("default", "Padrão"), C("hard", "Difícil"), C("tryhard", "Tryhard"), C(CustomProfile, "Personalizado"),
+        };
+
+        public static readonly Dictionary<string, Dictionary<string, string>> BotProfileValues = new Dictionary<string, Dictionary<string, string>>
+        {
+            // Padrao e como os jogadores gravados jogam hoje.
+            { "default", Profile(1, 1, 1, 1, 1, 1, 1, 1, 1, 1) },
+            { "hard", Profile(1.25, 1, 1.25, 0.75, 1.25, 1.25, 1.25, 1, 1.25, 1) },
+            { "tryhard", Profile(1.5, 1.25, 1.5, 0.5, 1.5, 1.5, 1.5, 1, 1.5, 0.75) },
+        };
+
+        private static Dictionary<string, string> Profile(double vision, double fov, double hearing, double reaction, double accuracy, double courage,
+            double aimSpeed, double fightDistance, double cover, double looting) =>
+            new Dictionary<string, string>
+            {
+                { "serverBot:modifiers:visionRange", N(vision) },
+                { "serverBot:modifiers:fieldOfView", N(fov) },
+                { "serverBot:modifiers:hearing", N(hearing) },
+                { "serverBot:modifiers:reactionTime", N(reaction) },
+                { "serverBot:modifiers:accuracy", N(accuracy) },
+                { "serverBot:modifiers:courage", N(courage) },
+                { "serverBot:modifiers:aimSpeed", N(aimSpeed) },
+                { "serverBot:modifiers:fightDistance", N(fightDistance) },
+                { "serverBot:modifiers:cover", N(cover) },
+                { "serverBot:modifiers:looting", N(looting) },
+            };
+
+        private static string N(double value) => value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+
+        private static KeyValuePair<string, string>[] Times(params double[] values) =>
+            values.Select(v => C(N(v), N(v) + "x")).ToArray();
+
+        private static PluginOption Fixed(PluginOption option)
+        {
+            option.Fixed = true;
+            return option;
+        }
+
         /// <summary>Valor salvo, ou o padrao quando nao ha valor valido.</summary>
         public static string Value(IDictionary<string, string> saved, PluginOption option)
         {
+            if (option.Fixed)
+            {
+                return option.Default;
+            }
             if (saved != null && saved.TryGetValue(option.Id, out var value) && value != null)
             {
                 if (option.IsToggle ? value == "true" || value == "false" : option.Choices.Any(c => c.Key == value))
