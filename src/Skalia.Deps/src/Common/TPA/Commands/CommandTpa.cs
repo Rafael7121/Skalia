@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Commands;
@@ -17,21 +18,32 @@ namespace SkaliaDeps.Commands
     {
         private readonly ITpaService m_TpaService;
         private readonly IStringLocalizer m_StringLocalizer;
+        private readonly IConfiguration m_Configuration;
         private readonly IUnturnedUserDirectory m_UserDirectory;
 
         public CommandTpa(
             ITpaService tpaService,
             IStringLocalizer stringLocalizer,
+            IConfiguration configuration,
             IUnturnedUserDirectory userDirectory,
             IServiceProvider serviceProvider) : base(serviceProvider)
         {
             m_TpaService = tpaService;
             m_StringLocalizer = stringLocalizer;
+            m_Configuration = configuration;
             m_UserDirectory = userDirectory;
         }
 
         protected override async UniTask OnExecuteAsync()
         {
+            // 0.1.0-y17.31: tpa:enabled (o launcher grava antes de subir o servidor).
+            if (!m_Configuration.GetValue("tpa:enabled", true))
+            {
+                await PrintAsync(
+                    $"{m_StringLocalizer["prefix"].Value} {m_StringLocalizer["messages:common:feature_disabled"].Value}");
+                return;
+            }
+
             var user = (UnturnedUser)Context.Actor;
 
             if (Context.Parameters.Length == 0)

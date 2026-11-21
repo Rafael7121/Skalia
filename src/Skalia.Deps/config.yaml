@@ -1,4 +1,8 @@
 tpa:
+  # SKALIA: false desliga o /tpa (responde que esta desativado). O launcher
+  # grava esta chave antes de subir o servidor. Ausente: true.
+  enabled: true
+
   # Tempo para aceitar um pedido antes que ele expire.
   requestTimeoutSeconds: 60
 
@@ -53,8 +57,22 @@ serverBot:
     freshDeathAvoidance: true   # sai e nao pega loot a 40m de onde outro bot morreu nos ultimos 2 min
 
 home:
+  # SKALIA: false desliga /home, /homes e /renomear (respondem que estao
+  # desativados). O launcher grava esta chave. Ausente: true.
+  enabled: true
+
   # Atraso antes de teleportar. Dano PvP durante este período cancela o teleporte.
   teleportDelaySeconds: 5
+
+vault:
+  # SKALIA: false desliga o /vault (responde que esta desativado). Os limites
+  # do Vault por cargo ficam em roleBenefits. Ausente: true.
+  enabled: true
+
+automaticReload:
+  # SKALIA: false desliga a recarga automatica quando o pente esvazia.
+  # Lido so ao carregar o plugin. Ausente: true.
+  enabled: true
 
 # Benefícios por cargo. Cargos superiores mantêm os mesmos comandos básicos e
 # apenas ampliam homes e o Vault. Em caso de múltiplos cargos, valem os maiores limites.

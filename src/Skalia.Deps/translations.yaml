@@ -6,6 +6,7 @@ messages:
     unavailable: "<color=#FFD54F>Não disponibilizamos kits no Survival, pois acreditamos que eles prejudicam a experiência de sobrevivência.</color>"
 
   common:
+    feature_disabled: "<color=#FFB347>Este comando está desativado neste servidor.</color>"
     player_not_found: "<color=#FF4D4D>Jogador '<color=#B22222>{Player}</color>' não encontrado.</color>"
     player_ambiguous: "<color=#FFB347>O nome '<color=#B36B00>{Player}</color>' corresponde a mais de um jogador: <color=#B36B00>{Players}</color>. Informe o nome completo ou o SteamID.</color>"
 

@@ -77,7 +77,16 @@ namespace SkaliaDeps
             GodModeState.Clear();
             GodModeState.ConfigureSpeedMultiplier(m_GodSpeedMultiplier);
             ChatNamePrefixService.Configure(Configuration);
-            AutomaticReloadService.Start(m_Logger);
+            // 0.1.0-y17.31: automaticReload:enabled. Sem Start o servico nao
+            // age (QueueAfterShot sai sem s_Shutdown).
+            if (Configuration.GetValue("automaticReload:enabled", true))
+            {
+                AutomaticReloadService.Start(m_Logger);
+            }
+            else
+            {
+                m_Logger.LogInformation("Recarga automatica desativada (automaticReload:enabled = false).");
+            }
             m_AutomaticAnnouncementService.Start();
             m_GroundCleanupService.Start();
             m_InventorySortService.Start();
