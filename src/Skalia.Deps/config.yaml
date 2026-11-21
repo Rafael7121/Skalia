@@ -62,6 +62,17 @@ serverBot:
     hordeCourage: 1
     meleeHeadshots: 1
     swingSpeed: 1
+    footsteps: 1
+    shotAwareness: 1
+    lookAround: 1
+    hipFire: 1
+    zombieAimSpeed: 1
+    fightHops: 1
+    hops: 1
+    staminaReserve: 1
+    gunSilence: 1
+    coveredLoot: 1
+    hordeEscape: 1
   ipAddress: "127.0.0.2"
   port: 27018
   respawnDelaySeconds: 3

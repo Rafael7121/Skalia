@@ -154,7 +154,7 @@ namespace SkaliaDeps
             {
                 return;
             }
-            var seconds = Random.Range(PvpSilenceMinSeconds, PvpSilenceMaxSeconds);
+            var seconds = Random.Range(PvpSilenceMinSeconds, PvpSilenceMaxSeconds) * SkaliaBotModifiers.GunSilence;
             m_PvpSilentUntil = now + seconds;
             BotLog(LogLevel.Information,
                 "Ouvi tiro de quem nao vejo a {Distance:0}m; em silencio por {Seconds:0}s (zumbi comum na faca).",

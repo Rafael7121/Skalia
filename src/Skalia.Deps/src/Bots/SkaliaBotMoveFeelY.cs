@@ -143,7 +143,7 @@ namespace SkaliaDeps
             if (now - m_PvpRunLastSprintAt > PvpRunGapSeconds)
             {
                 // A new run.
-                m_PvpRunHopping = Random.value < PvpRunHopShare;
+                m_PvpRunHopping = Random.value < SkaliaBotModifiers.Share(PvpRunHopShare, SkaliaBotModifiers.FightHops);
                 m_PvpRunNextHopAt = now + DrawFromQuantiles(s_PvpRunHopQuantiles, s_PvpRunFirstHopSeconds);
             }
             m_PvpRunLastSprintAt = now;

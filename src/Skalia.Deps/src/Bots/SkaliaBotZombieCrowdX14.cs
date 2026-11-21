@@ -31,7 +31,8 @@ namespace SkaliaDeps
         private static int StunKiteMaxChasers => SkaliaBotModifiers.Count(5, SkaliaBotModifiers.HordeCourage);
         private const float ChaserMeters = 40f;
         private static int BigGroupCount => SkaliaBotModifiers.Count(6, SkaliaBotModifiers.HordeCourage);
-        private const float BigGroupLeaveNearest = 3.6f;
+        // 0.1.0-y17.37: times serverBot:modifiers:hordeEscape.
+        private static float BigGroupLeaveNearest => 3.6f * SkaliaBotModifiers.HordeEscape;
         private const float SwapRetreatMeters = 8f;
         private const float SwapSprintStamina = 33f;
         private const float EncounterGapSeconds = 5f;

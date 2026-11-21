@@ -352,7 +352,7 @@ namespace SkaliaDeps
             {
                 // 0.1.0-y17.27: the players' looks, how often, how far and
                 // how long, sprinting or walking (SkaliaBotMoveFeelY).
-                m_HabitNextGlanceAt = now + NextMoveLookGap(m_IsSprinting);
+                m_HabitNextGlanceAt = now + NextMoveLookGap(m_IsSprinting) / SkaliaBotModifiers.LookAround;
                 if (roomForGlance && !HasRoofOverBot(position))
                 {
                     var side = Random.value < 0.5f ? -1f : 1f;
@@ -365,7 +365,7 @@ namespace SkaliaDeps
             // A hop on open, flat ground while running.
             if (m_HabitNextHopAt <= 0f)
             {
-                m_HabitNextHopAt = now + Random.Range(4f, 10f);
+                m_HabitNextHopAt = now + Random.Range(4f, 10f) / SkaliaBotModifiers.Hops;
             }
             if (m_IsSprinting
                 && m_IsWalking
@@ -375,7 +375,7 @@ namespace SkaliaDeps
                 && m_Player.life.stamina >= HabitHopStamina
                 && navigationDistance >= 5f)
             {
-                m_HabitNextHopAt = now + Random.Range(4f, 10f);
+                m_HabitNextHopAt = now + Random.Range(4f, 10f) / SkaliaBotModifiers.Hops;
                 // 0.2.2t: a hop only where being hard to hit matters, in
                 // the open with nothing to hide behind within 10m.
                 if (IsFlatOpenAhead(position, toNavigation / navigationDistance)

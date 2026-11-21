@@ -20,9 +20,10 @@ namespace SkaliaDeps
         {
             // Up close the settle is the short end of the players' range: a
             // zombie at 4m reaches the bot in about a second.
-            return distance <= HipFireMeters
+            // 0.1.0-y17.37: over serverBot:modifiers:zombieAimSpeed.
+            return (distance <= HipFireMeters
                 ? Random.Range(0.25f, 0.5f)
-                : Random.Range(0.3f, 0.8f);
+                : Random.Range(0.3f, 0.8f)) / SkaliaBotModifiers.ZombieAimSpeed;
         }
 
         // True while this fight opens from the hip (no sights): decided once
@@ -37,7 +38,7 @@ namespace SkaliaDeps
                 if (distance <= HipFireMeters
                     && gun.action != EAction.String
                     && m_Player.stance.stance != EPlayerStance.SPRINT
-                    && Random.value < HipFireChance)
+                    && Random.value < SkaliaBotModifiers.Share(HipFireChance, SkaliaBotModifiers.HipFire))
                 {
                     m_GunHipFireUntil = now + 0.6f;
                     BotLog(LogLevel.Debug,

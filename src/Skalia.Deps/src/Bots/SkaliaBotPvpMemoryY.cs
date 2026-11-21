@@ -37,9 +37,11 @@ namespace SkaliaDeps
     // players went back to the open, so does the bot.
     internal sealed partial class SkaliaBotIdleSimulation
     {
-        private const float PvpStepReachMeters = 32f;
+        // 0.1.0-y17.37: times serverBot:modifiers:footsteps.
+        private static float PvpStepReachMeters => 32f * SkaliaBotModifiers.Footsteps;
         private const float PvpStepCheckSeconds = 1f;
-        private const float PvpCoveredLootSeconds = 60f;
+        // 0.1.0-y17.37: times serverBot:modifiers:coveredLoot.
+        private static float PvpCoveredLootSeconds => 60f * SkaliaBotModifiers.CoveredLoot;
 
         private sealed class PvpRemembered
         {

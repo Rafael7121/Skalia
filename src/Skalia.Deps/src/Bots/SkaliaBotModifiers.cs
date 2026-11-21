@@ -52,6 +52,27 @@ namespace SkaliaDeps
     // - meleeHeadshots: the blade on the head (96%), times it (at most all).
     // - swingSpeed: the players' 0.44s between blows (p25) and the 0.08s
     //   after the swing, divided; never under the swing's own length.
+    // 0.1.0-y17.37 (the tester, 21/11: "quanto mais opcoes o usuario tiver
+    // melhor"), 11 more:
+    // - footsteps: how far a man's steps are heard (the game's 32m, scaled
+    //   by his volume), times it.
+    // - shotAwareness: the share that turned to a shot heard off the
+    //   screen (64%, at most all) and the look that way (0.1-14.7s), times.
+    // - lookAround: the looks to the side on the way (4.8 a minute
+    //   sprinting, 15.6 walking), more often.
+    // - hipFire: from the hip up close, at a man within 15m (29%) and at a
+    //   zombie within 6m (25%), times it (at most all).
+    // - zombieAimSpeed: into the sights before the first round at a zombie
+    //   (0.3-0.8s, 0.25-0.5s up close), divided.
+    // - fightHops: the fight's sprints with hops (43%), times (at most all).
+    // - hops: the hops on the way (one every 4-10s), more often.
+    // - staminaReserve: the stamina it waits for to sprint again after
+    //   running out (50; players' median 54), times it (at most 100).
+    // - gunSilence: the gun kept quiet after a shot from someone unseen
+    //   (40-120s), times it.
+    // - coveredLoot: loot only under a roof after a fight (60s), times it.
+    // - hordeEscape: the big group run from with the nearest within 3.6m
+    //   (the players' p75), times it.
     // fightDistance and looting have no recorded base to scale (the bot
     // fights a man wherever its gun reaches him, and a man seen always
     // comes before loot); they are read for the log only.
@@ -83,6 +104,17 @@ namespace SkaliaDeps
         public static float HordeCourage { get; private set; } = 1f;
         public static float MeleeHeadshots { get; private set; } = 1f;
         public static float SwingSpeed { get; private set; } = 1f;
+        public static float Footsteps { get; private set; } = 1f;
+        public static float ShotAwareness { get; private set; } = 1f;
+        public static float LookAround { get; private set; } = 1f;
+        public static float HipFire { get; private set; } = 1f;
+        public static float ZombieAimSpeed { get; private set; } = 1f;
+        public static float FightHops { get; private set; } = 1f;
+        public static float Hops { get; private set; } = 1f;
+        public static float StaminaReserve { get; private set; } = 1f;
+        public static float GunSilence { get; private set; } = 1f;
+        public static float CoveredLoot { get; private set; } = 1f;
+        public static float HordeEscape { get; private set; } = 1f;
 
         public static void Load(IConfiguration configuration, ILogger logger)
         {
@@ -107,6 +139,17 @@ namespace SkaliaDeps
             HordeCourage = Read(configuration, logger, "hordeCourage", Minimum, Maximum);
             MeleeHeadshots = Read(configuration, logger, "meleeHeadshots", Minimum, Maximum);
             SwingSpeed = Read(configuration, logger, "swingSpeed", Minimum, Maximum);
+            Footsteps = Read(configuration, logger, "footsteps", Minimum, Maximum);
+            ShotAwareness = Read(configuration, logger, "shotAwareness", Minimum, Maximum);
+            LookAround = Read(configuration, logger, "lookAround", Minimum, Maximum);
+            HipFire = Read(configuration, logger, "hipFire", Minimum, Maximum);
+            ZombieAimSpeed = Read(configuration, logger, "zombieAimSpeed", Minimum, Maximum);
+            FightHops = Read(configuration, logger, "fightHops", Minimum, Maximum);
+            Hops = Read(configuration, logger, "hops", Minimum, Maximum);
+            StaminaReserve = Read(configuration, logger, "staminaReserve", Minimum, Maximum);
+            GunSilence = Read(configuration, logger, "gunSilence", Minimum, Maximum);
+            CoveredLoot = Read(configuration, logger, "coveredLoot", Minimum, Maximum);
+            HordeEscape = Read(configuration, logger, "hordeEscape", Minimum, Maximum);
             var unscaled = new[] { "nightVision", "headshots", "recoilControl", "flanking", "fleeWhenHurt" };
             var fightDistance = Read(configuration, logger, "fightDistance", Minimum, Maximum);
             var looting = Read(configuration, logger, "looting", Minimum, Maximum);
@@ -117,6 +160,10 @@ namespace SkaliaDeps
                 "Modificadores dos bots: origem do tiro {ShotOrigin}, demora para abrir fogo {OpenFire}, rajada {Burst}, pausa {Pause}, passos de lado {Strafing}, reposicionar {Reposition}, correr {Sprinting}, persistencia {Persistence}, perseguir {Chase}, curar {Heal}, coragem com horda {Horde}, golpe na cabeca {MeleeHead}, golpes {Swing}.",
                 F(ShotOrigin), F(OpenFireDelay), F(BurstLength), F(BurstPause), F(Strafing), F(Repositioning), F(Sprinting),
                 F(Persistence), F(Chase), F(HealSpeed), F(HordeCourage), F(MeleeHeadshots), F(SwingSpeed));
+            logger.LogInformation(
+                "Modificadores dos bots: passos {Footsteps}, atencao a tiros {ShotAwareness}, olhar em volta {LookAround}, tiro do quadril {HipFire}, mira em zumbi {ZombieAim}, pulos na luta {FightHops}, pulos no caminho {Hops}, folego para correr {Stamina}, silencio {Silence}, saque coberto {CoveredLoot}, fuga da horda {HordeEscape}.",
+                F(Footsteps), F(ShotAwareness), F(LookAround), F(HipFire), F(ZombieAimSpeed), F(FightHops), F(Hops),
+                F(StaminaReserve), F(GunSilence), F(CoveredLoot), F(HordeEscape));
             if (fightDistance != 1f || looting != 1f)
             {
                 logger.LogWarning(

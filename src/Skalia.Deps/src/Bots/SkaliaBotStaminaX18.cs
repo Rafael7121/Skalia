@@ -18,7 +18,8 @@ namespace SkaliaDeps
     // under 10). Out of breath, the bot lets go of sprint until 50.
     internal sealed partial class SkaliaBotIdleSimulation
     {
-        private const byte StaminaResumeSprint = 50;
+        // 0.1.0-y17.37: times serverBot:modifiers:staminaReserve, at most 100.
+        private static byte StaminaResumeSprint => (byte)System.Math.Min(100, SkaliaBotModifiers.Count(50, SkaliaBotModifiers.StaminaReserve));
         private bool m_StaminaRecovering;
         private float m_StaminaRecoveringSince;
 

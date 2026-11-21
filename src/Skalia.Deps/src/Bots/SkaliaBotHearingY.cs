@@ -251,7 +251,8 @@ namespace SkaliaDeps
             var name = shooter.channel.owner.playerID.characterName;
             // 0.1.0-y16: quiet, not to give itself away (SkaliaBotPvpSpotY).
             NotePvpShotHeard(name, distance, aimed);
-            if (!aimed && Random.value > HearTurnChance)
+            // 0.1.0-y17.37: times serverBot:modifiers:shotAwareness.
+            if (!aimed && Random.value > SkaliaBotModifiers.Share(HearTurnChance, SkaliaBotModifiers.ShotAwareness))
             {
                 BotLog(LogLevel.Debug, "Ouvi tiro de {Name} a {Distance:0}m fora da tela; nao virei.", name, distance);
                 return;
@@ -266,7 +267,7 @@ namespace SkaliaDeps
             // 0.1.0-y17: where it believes the shot came from, with the
             // players' error, not the point the round left from.
             NoteShotSector(shooter, origin, now, out var believed);
-            var lookFor = DrawFromQuantiles(s_HearQuantiles, s_HearLookSeconds);
+            var lookFor = DrawFromQuantiles(s_HearQuantiles, s_HearLookSeconds) * SkaliaBotModifiers.ShotAwareness;
             if (aimed)
             {
                 // Long enough for one vision scan once the head is there.

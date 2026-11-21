@@ -264,7 +264,11 @@ namespace SkaliaDeps
                 var stand = 1f - crouch - prone;
                 m_PvpPosture = roll < stand ? 0 : roll < stand + crouch ? 1 : 2;
             }
-            m_PvpHipFire = band == 0 && Random.value > PvpCloseAimShare;
+            // 0.1.0-y17.37: the hip share (1 - PvpCloseAimShare) times
+            // serverBot:modifiers:hipFire.
+            m_PvpHipFire = band == 0 && (SkaliaBotModifiers.HipFire == 1f
+                ? Random.value > PvpCloseAimShare
+                : Random.value < SkaliaBotModifiers.Share(1f - PvpCloseAimShare, SkaliaBotModifiers.HipFire));
             m_PvpStepUntil = now;
             m_PvpStepAnalog = 0x11;
             m_PvpLastSide = Random.value < 0.5f ? -1 : 1;
