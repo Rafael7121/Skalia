@@ -373,6 +373,19 @@ namespace Skalia.Launcher
                     AddWide(card, toggle);
                     continue;
                 }
+                if (option.Slider)
+                {
+                    var slider = new Slider();
+                    foreach (var choice in option.Choices)
+                    {
+                        slider.Choices.Add(new Choice(choice.Key, choice.Value));
+                    }
+                    slider.MarkerIndex = Array.FindIndex(option.Choices, c => c.Key == option.Default);
+                    slider.SelectedIndex = slider.MarkerIndex;
+                    m_PluginControls[option.Id] = slider;
+                    AddField(card, L.Tr(option.Title), slider, option.Hint == null ? null : L.Tr(option.Hint));
+                    continue;
+                }
                 var combo = new Dropdown();
                 foreach (var choice in option.Choices)
                 {
@@ -391,7 +404,7 @@ namespace Skalia.Launcher
         private void WireBotProfile()
         {
             var modifiers = PluginOptions.All.Where(o => o.Group == PluginOptions.BotDifficulty)
-                .Select(o => m_PluginControls[o.Id] as Dropdown).ToList();
+                .Select(o => m_PluginControls[o.Id] as IChoicePicker).ToList();
             m_BotProfile.SelectedIndexChanged += (s, e) =>
             {
                 var chosen = (m_BotProfile.SelectedItem as Choice)?.Value;
@@ -402,9 +415,9 @@ namespace Skalia.Launcher
                 m_ApplyingProfile = true;
                 foreach (var pair in values)
                 {
-                    if (m_PluginControls.TryGetValue(pair.Key, out var control) && control is Dropdown combo)
+                    if (m_PluginControls.TryGetValue(pair.Key, out var control) && control is IChoicePicker combo)
                     {
-                        combo.SelectedItem = combo.Items.Cast<Choice>().FirstOrDefault(c => c.Value == pair.Value) ?? combo.SelectedItem;
+                        combo.SelectedItem = combo.Choices.Cast<Choice>().FirstOrDefault(c => c.Value == pair.Value) ?? combo.SelectedItem;
                     }
                 }
                 m_ApplyingProfile = false;
@@ -425,7 +438,7 @@ namespace Skalia.Launcher
         private void SelectProfileFromModifiers()
         {
             var current = PluginOptions.All.Where(o => o.Group == PluginOptions.BotDifficulty)
-                .ToDictionary(o => o.Id, o => ((m_PluginControls[o.Id] as Dropdown)?.SelectedItem as Choice)?.Value);
+                .ToDictionary(o => o.Id, o => ((m_PluginControls[o.Id] as IChoicePicker)?.SelectedItem as Choice)?.Value);
             var match = PluginOptions.BotProfileValues.FirstOrDefault(p => p.Value.All(v => current.TryGetValue(v.Key, out var c) && c == v.Value)).Key
                 ?? PluginOptions.CustomProfile;
             m_ApplyingProfile = true;
@@ -634,7 +647,11 @@ namespace Skalia.Launcher
                 Margin = new Padding(0, labelTop, 12, RowGap),
                 MaximumSize = new Size(Theme.LabelWidth - 12, 0),
             }, 0, row);
-            Theme.StyleInput(control);
+            if (!(control is Slider))
+            {
+                // O slider fica direto no card, sem fundo de campo.
+                Theme.StyleInput(control);
+            }
             if (control is TextBox box)
             {
                 control = new InputFrame(box);
@@ -839,9 +856,9 @@ namespace Skalia.Launcher
                 {
                     toggle.Checked = value == "true";
                 }
-                else if (control is Dropdown combo)
+                else if (control is IChoicePicker combo)
                 {
-                    var match = combo.Items.Cast<Choice>().FirstOrDefault(c => c.Value == value);
+                    var match = combo.Choices.Cast<Choice>().FirstOrDefault(c => c.Value == value);
                     if (match != null)
                     {
                         combo.SelectedItem = match;
@@ -944,7 +961,7 @@ namespace Skalia.Launcher
                 {
                     m_Settings.PluginOptions[pair.Key] = toggle.Checked ? "true" : "false";
                 }
-                else if (pair.Value is Dropdown combo && combo.SelectedItem is Choice choice)
+                else if (pair.Value is IChoicePicker combo && combo.SelectedItem is Choice choice)
                 {
                     m_Settings.PluginOptions[pair.Key] = choice.Value;
                 }

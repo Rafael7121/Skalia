@@ -409,7 +409,7 @@ namespace Skalia.Launcher
     /// mudam conforme o Windows). Fechada: fundo input, borda de 1px e chevron. Aberta: lista
     /// escura logo abaixo, ate 10 linhas, com rolagem escura.
     /// </summary>
-    internal sealed class Dropdown : Control
+    internal sealed partial class Dropdown : Control
     {
         public sealed class ItemCollection : Collection<object>
         {
