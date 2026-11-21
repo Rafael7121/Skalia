@@ -1505,6 +1505,19 @@ namespace SkaliaDeps
                 : -1f;
         }
 
+        // The maps of the loaded level, each once per map. 0.1.0-y17.33: also
+        // from the plugin at the level's load (ISkaliaBotService.PrepareMaps),
+        // so the new navmesh is ready before the bots come in.
+        internal static void StartMaps(ILogger logger)
+        {
+            SkaliaBotTerrainMap.EnsureStarted(logger);
+            SkaliaBotStructureMap.EnsureStarted(logger);
+            SkaliaBotNavmeshAudit.EnsureStarted(logger);
+            SkaliaBotUnityNavmesh.EnsureStarted(logger);
+            SkaliaBotLadderMap.EnsureStarted(logger);
+            SkaliaBotObjectMap.EnsureStarted(logger);
+        }
+
         public void Start()
         {
             if (m_Running)
@@ -1515,12 +1528,7 @@ namespace SkaliaDeps
             SkaliaBotMovementDiagnostics.Register(m_Player, m_Logger);
             s_ActiveSimulations[m_Player] = this;
             m_Running = true;
-            SkaliaBotTerrainMap.EnsureStarted(m_Logger);
-            SkaliaBotStructureMap.EnsureStarted(m_Logger);
-            SkaliaBotNavmeshAudit.EnsureStarted(m_Logger);
-            SkaliaBotUnityNavmesh.EnsureStarted(m_Logger);
-            SkaliaBotLadderMap.EnsureStarted(m_Logger);
-            SkaliaBotObjectMap.EnsureStarted(m_Logger);
+            StartMaps(m_Logger);
             // 0.2.2x4 (doc 16.12): the high places of the hunt area, measured
             // and written to a CSV only.
             EnsureHuntGround();

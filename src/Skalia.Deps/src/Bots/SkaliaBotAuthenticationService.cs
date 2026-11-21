@@ -114,6 +114,11 @@ namespace SkaliaDeps
             SkaliaBotIdleSimulation.s_Settings = SkaliaBotBehaviorSettings.Load(configuration, m_Logger);
         }
 
+        public void PrepareMaps()
+        {
+            SkaliaBotIdleSimulation.StartMaps(m_Logger);
+        }
+
         public void Start()
         {
             if (m_Running)

@@ -131,6 +131,96 @@ namespace SkaliaDeps
             }
         }
 
+        // 0.1.0-y17.33 (the tester, 21/11: "faça os bots só carregarem depois
+        // da malha nova pronta e adicione algo tipo loading no console e
+        // deixe loading no launcher enquanto a malha nova não estiver
+        // pronta"). The new navmesh used to start with the first bot, which
+        // came in 5s after the map and ran on the zombie mesh for the 17-105s
+        // the build took (Washington, 15-17/11). Now it starts with the map;
+        // the launcher reads the share in skalia.loading, and skalia.ready and
+        // the bots wait for the mesh. A failed, switched-off or missing mesh
+        // does not hold them: the server is marked ready with a warning.
+        private const float MeshWaitLimitSeconds = 1800f;
+        private int m_ReadyGeneration;
+
+        private async UniTask PrepareBotsThenReadyAsync()
+        {
+            var generation = ++m_ReadyGeneration;
+            try
+            {
+                await UniTask.SwitchToMainThread();
+                SkaliaLauncherBridge.WriteLoading(0, m_Logger);
+                m_Logger.LogInformation("SKALIA: preparando os bots (malha nova)... 0%");
+                // The maps used to start 5s after the map, with the first bot
+                // (AutoCallBotsAsync's wait); the same wait here.
+                await UniTask.Delay(TimeSpan.FromSeconds(5), ignoreTimeScale: true);
+                await UniTask.SwitchToMainThread();
+                if (generation != m_ReadyGeneration)
+                {
+                    return;
+                }
+                m_BotService.PrepareMaps();
+                if (!SkaliaBotUnityNavmesh.Enabled)
+                {
+                    m_Logger.LogWarning("SKALIA: malha nova desligada; servidor pronto sem esperar por ela.");
+                }
+                else if (!SkaliaBotUnityNavmesh.Started)
+                {
+                    m_Logger.LogWarning("SKALIA: este mapa nao tem malha nova; servidor pronto sem esperar por ela.");
+                }
+                else
+                {
+                    var shown = 0;
+                    var since = UnityEngine.Time.realtimeSinceStartup;
+                    while (!SkaliaBotUnityNavmesh.WholeReady)
+                    {
+                        if (SkaliaBotUnityNavmesh.WholeFailed)
+                        {
+                            m_Logger.LogWarning("SKALIA: a malha nova falhou; servidor pronto, os bots usam os pedacos de 102m e a malha dos zumbis.");
+                            break;
+                        }
+                        if (!SkaliaBotUnityNavmesh.Enabled)
+                        {
+                            m_Logger.LogWarning("SKALIA: malha nova desligada durante a preparacao; servidor pronto sem ela.");
+                            break;
+                        }
+                        if (UnityEngine.Time.realtimeSinceStartup - since > MeshWaitLimitSeconds)
+                        {
+                            m_Logger.LogWarning("SKALIA: a malha nova nao ficou pronta em {Minutes:0} min; servidor pronto sem ela.", MeshWaitLimitSeconds / 60f);
+                            break;
+                        }
+                        var percent = SkaliaBotUnityNavmesh.LoadingPercent;
+                        if (percent != shown)
+                        {
+                            shown = percent;
+                            SkaliaLauncherBridge.WriteLoading(percent, m_Logger);
+                            m_Logger.LogInformation("SKALIA: preparando os bots (malha nova)... {Percent}%", percent);
+                        }
+                        await UniTask.Delay(TimeSpan.FromSeconds(1), ignoreTimeScale: true);
+                        await UniTask.SwitchToMainThread();
+                        if (generation != m_ReadyGeneration)
+                        {
+                            return;
+                        }
+                    }
+                }
+                SkaliaLauncherBridge.MarkReady(m_Logger);
+                m_Logger.LogInformation("SKALIA: preparando os bots (malha nova)... 100%. Servidor pronto.");
+                if (m_AutoCallBots)
+                {
+                    AutoCallBotsAsync().Forget();
+                }
+            }
+            catch (Exception exception)
+            {
+                m_Logger.LogError(exception, "SKALIA: falha preparando os bots; servidor marcado como pronto mesmo assim.");
+                if (generation == m_ReadyGeneration)
+                {
+                    SkaliaLauncherBridge.MarkReady(m_Logger);
+                }
+            }
+        }
+
         private async UniTask SyncOnlinePlayersAfterLoadAsync()
         {
             try
@@ -144,11 +234,7 @@ namespace SkaliaDeps
                 await m_ExperienceBarService.SyncOnlinePlayersAsync();
                 if (Level.isLoaded)
                 {
-                    SkaliaLauncherBridge.MarkReady(m_Logger);
-                    if (m_AutoCallBots)
-                    {
-                        AutoCallBotsAsync().Forget();
-                    }
+                    PrepareBotsThenReadyAsync().Forget();
                     ValidateNaturalItemSpawnRemap();
                     SkaliaLootAmount.Start();
                 }
@@ -169,6 +255,7 @@ namespace SkaliaDeps
             SkaliaPlayerRecorder.Stop();
             SkaliaLootAmount.Stop();
             SkaliaLauncherBridge.Stop();
+            m_ReadyGeneration++;
             await m_BotService.StopAsync();
             await UniTask.SwitchToMainThread();
             await m_VaultService.ShutdownAsync();
@@ -192,11 +279,7 @@ namespace SkaliaDeps
 
         private void OnPostLevelLoaded(int level)
         {
-            SkaliaLauncherBridge.MarkReady(m_Logger);
-            if (m_AutoCallBots)
-            {
-                AutoCallBotsAsync().Forget();
-            }
+            PrepareBotsThenReadyAsync().Forget();
             ZombieSpawnScalingService.ApplyToLoadedLevel();
             ValidateNaturalItemSpawnRemap();
             SkaliaLootAmount.Start();

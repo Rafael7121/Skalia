@@ -8,6 +8,10 @@ namespace SkaliaDeps
     {
         void Start();
 
+        // 0.1.0-y17.33: the maps the bots need (the new navmesh above all),
+        // started at the level's load instead of at the first bot.
+        void PrepareMaps();
+
         UniTask StopAsync();
 
         UniTask<int> KickAllAsync();

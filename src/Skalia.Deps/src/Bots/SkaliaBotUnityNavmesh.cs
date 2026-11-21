@@ -119,6 +119,16 @@ namespace SkaliaDeps
         public static bool MapFilled => s_Started && s_FillDoneLogged;
         public static int QueuedChunks => s_Queue.Count;
 
+        // 0.1.0-y17.33: for the launcher's loading screen (SkaliaDepsCore).
+        // The one mesh is built in steps; the build itself is one call to
+        // Unity that holds the server (17-105s on Washington, 15-17/11) and
+        // tells nothing on the way, so the share stays put through it.
+        private static int s_LoadingPercent;
+        public static int LoadingPercent => s_LoadingPercent;
+        public static bool Started => s_Started;
+        public static bool WholeReady => s_Whole;
+        public static bool WholeFailed => s_WholeFailed;
+
         public static void EnsureStarted(ILogger logger)
         {
             var map = Level.info?.name;
@@ -171,6 +181,7 @@ namespace SkaliaDeps
             s_Whole = false;
             s_WholeBuilding = false;
             s_WholeFailed = false;
+            s_LoadingPercent = 0;
             s_GoalFailStarts.Clear();
             s_Settings = NavMesh.CreateSettings();
             s_Settings.agentRadius = BodyRadius;
@@ -537,8 +548,10 @@ namespace SkaliaDeps
                 {
                     await UniTask.Delay(TimeSpan.FromSeconds(1));
                 }
+                s_LoadingPercent = 5;
                 // Let the server finish starting before the heavy part.
                 await UniTask.Delay(TimeSpan.FromSeconds(5));
+                s_LoadingPercent = 10;
                 if (generation != s_Generation)
                 {
                     return;
@@ -574,6 +587,7 @@ namespace SkaliaDeps
                 var center = min + size * 0.5f;
                 var collect = new Bounds(center, size + new Vector3(SourceMargin * 2f, 0f, SourceMargin * 2f));
                 s_WholeStatus = "malha unica: juntando o mapa";
+                s_LoadingPercent = 15;
                 var sources = new List<NavMeshBuildSource>();
                 NavMeshBuilder.CollectSources(collect, SourceMask, NavMeshCollectGeometry.PhysicsColliders, 0, s_NoMarkups, sources);
                 sources.RemoveAll(source =>
@@ -640,6 +654,7 @@ namespace SkaliaDeps
                     "Malha nova: montando uma malha unica para o mapa inteiro ({Size:0}m x {Size:0}m): {Colliders} colisores ({Unreadable} ilegiveis), {Terrains} trechos de terreno ({Sea} so mar), juntados em {Ms:0} ms.",
                     size.x, size.z, colliders, unreadable.Count, terrains.Count, sea, collectMs);
 
+                s_LoadingPercent = 25;
                 NavMeshData? data = null;
                 var mode = "em segundo plano";
                 var bounds = new Bounds(center, size);
@@ -668,6 +683,7 @@ namespace SkaliaDeps
                         lastProgressAt = now;
                     }
                     s_WholeStatus = "malha unica: montando em segundo plano, " + (operation.progress * 100f).ToString("0") + "% em " + watch.Elapsed.TotalSeconds.ToString("0") + "s";
+                    s_LoadingPercent = 25 + Mathf.Clamp(Mathf.FloorToInt(operation.progress * 74f), 0, 74);
                     if (now >= nextLog)
                     {
                         nextLog = now + 30f;
@@ -746,6 +762,7 @@ namespace SkaliaDeps
                 s_WholeData = data;
                 s_WholeInstance = NavMesh.AddNavMeshData(data);
                 s_Whole = true;
+                s_LoadingPercent = 100;
                 LinkLadders();
                 var addMs = watch.Elapsed.TotalMilliseconds;
                 s_WholeStatus = "malha unica pronta (" + mode + ", " + buildSeconds.ToString("0") + "s)";
