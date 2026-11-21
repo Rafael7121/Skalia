@@ -9,6 +9,8 @@ if not exist plugins mkdir plugins
 copy /Y "src\Skalia.Launcher\bin\Release\net48\SKALIA.exe" "SKALIA.exe" >nul
 copy /Y "src\Skalia.Launcher\bin\Release\net48\SKALIA.exe.config" "SKALIA.exe.config" >nul
 copy /Y "src\Skalia.Deps\bin\Release\netstandard2.1\SkaliaDeps.dll" "plugins\SkaliaDeps.dll" >nul
+copy /Y "src\Skalia.Deps\config.yaml" "plugins\Skalia.Deps.config.yaml" >nul
+copy /Y "src\Skalia.Deps\translations.en.yaml" "plugins\Skalia.Deps.translations.en.yaml" >nul
 echo SKALIA built.
 goto :eof
 :error

@@ -30,12 +30,15 @@ namespace Skalia.Launcher
         private readonly List<Control> m_Pages = new List<Control>();
         private readonly List<ToggleSwitch> m_PluginToggles = new List<ToggleSwitch>();
         private readonly Dictionary<string, ComboBox> m_RuleCombos = new Dictionary<string, ComboBox>();
+        private readonly Dictionary<string, Control> m_PluginControls = new Dictionary<string, Control>();
 
         private Panel m_Content;
         private TextBox m_Name, m_Welcome, m_Password, m_BotNames, m_Workshop, m_Log;
         private ComboBox m_Map, m_Difficulty, m_Perspective;
         private NumericUpDown m_MaxPlayers, m_Port, m_BotCount;
-        private ToggleSwitch m_PvP, m_Cheats, m_ShowConsole, m_AutoCallBots;
+        private ToggleSwitch m_PvP, m_Cheats, m_ShowConsole, m_AutoCallBots, m_BotLogs;
+        private Panel m_Dev;
+        private Label m_DevHeader;
         private FlowLayoutPanel m_PluginList;
         private Panel m_Advanced;
         private Label m_AdvancedHeader;
@@ -114,8 +117,10 @@ namespace Skalia.Launcher
             Controls.Add(BuildSidebar());
 
             AddPage(BuildServerPage());
+            AddPage(BuildGameplayPage());
             AddPage(BuildPluginsPage());
             AddPage(BuildConsolePage());
+            WirePluginDependencies();
             ShowPage(0);
         }
 
@@ -150,8 +155,8 @@ namespace Skalia.Launcher
                 Location = new Point(24, 118),
             });
 
-            var nav = new Panel { Dock = DockStyle.Top, Height = 160, BackColor = Theme.Sidebar, Padding = new Padding(0, 8, 0, 0) };
-            var labels = new[] { L.Tr("Servidor"), L.Tr("Plugins e Workshop"), L.Tr("Console") };
+            var nav = new Panel { Dock = DockStyle.Top, Height = 190, BackColor = Theme.Sidebar, Padding = new Padding(0, 8, 0, 0) };
+            var labels = new[] { L.Tr("Servidor"), L.Tr("Jogabilidade"), L.Tr("Plugins e Workshop"), L.Tr("Console") };
             for (var i = 0; i < labels.Length; i++)
             {
                 var index = i;
@@ -246,6 +251,10 @@ namespace Skalia.Launcher
             AddField(bots, L.Tr("Quantidade"), m_BotCount);
             AddField(bots, L.Tr("Nomes"), m_BotNames, L.Tr("Um por linha. Vazio = nomes gerados automaticamente."));
             AddWide(bots, m_AutoCallBots);
+            AddPluginOptions(bots, PluginOptions.Bots);
+            AddWide(bots, new Panel { Height = 14, Width = 10, BackColor = Theme.Card, Margin = new Padding(0) });
+            AddSection(bots, L.Tr(PluginOptions.BotBehavior));
+            AddPluginOptions(bots, PluginOptions.BotBehavior);
 
             m_MaxPlayers = new NumericUpDown { Minimum = 1, Maximum = 200 };
             m_Perspective = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
@@ -294,9 +303,97 @@ namespace Skalia.Launcher
             Stack(m_Advanced, Spacer(14));
             Stack(m_Advanced, server);
             Stack(page, m_Advanced);
+
+            Stack(page, Spacer(10));
+            m_DevHeader = new Label
+            {
+                Dock = DockStyle.Top,
+                Height = 36,
+                Font = Theme.Semibold(11f),
+                ForeColor = Theme.Muted,
+                Cursor = Cursors.Hand,
+                TextAlign = ContentAlignment.MiddleLeft,
+            };
+            m_DevHeader.Click += (s, e) => SetDevVisible(!m_Dev.Visible);
+            m_DevHeader.MouseEnter += (s, e) => m_DevHeader.ForeColor = Theme.Text;
+            m_DevHeader.MouseLeave += (s, e) => m_DevHeader.ForeColor = Theme.Muted;
+            Stack(page, m_DevHeader);
+
+            m_Dev = new Panel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, BackColor = Theme.Window };
+            m_BotLogs = new ToggleSwitch(L.Tr("Log dos bots"), L.Tr("Registra cada decisão dos bots. Pesado; só para investigar problemas."));
+            var dev = NewCard();
+            AddWide(dev, Hint(L.Tr("Só mexa aqui se você sabe o que está fazendo.")));
+            AddWide(dev, m_BotLogs);
+            Stack(m_Dev, dev);
+            Stack(page, m_Dev);
             Stack(page, Spacer(28));
             SetAdvancedVisible(false);
+            SetDevVisible(false);
             return page.Parent;
+        }
+
+        private Control BuildGameplayPage()
+        {
+            var page = NewPage(L.Tr("Jogabilidade"), L.Tr("Comandos e regras extras que vêm com o SKALIA."));
+            var first = true;
+            foreach (var group in new[] { PluginOptions.Commands, PluginOptions.World })
+            {
+                if (!first)
+                {
+                    Stack(page, Spacer(18));
+                }
+                first = false;
+                var card = NewCard();
+                AddSection(card, L.Tr(group));
+                AddPluginOptions(card, group);
+                Stack(page, card);
+            }
+            Stack(page, Spacer(28));
+            return page.Parent;
+        }
+
+        private void AddPluginOptions(TableLayoutPanel card, string group)
+        {
+            foreach (var option in PluginOptions.All.Where(o => o.Group == group))
+            {
+                if (option.IsToggle)
+                {
+                    var toggle = new ToggleSwitch(L.Tr(option.Title), option.Hint == null ? null : L.Tr(option.Hint));
+                    m_PluginControls[option.Id] = toggle;
+                    AddWide(card, toggle);
+                    continue;
+                }
+                var combo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+                foreach (var choice in option.Choices)
+                {
+                    combo.Items.Add(new Choice(choice.Key, L.Tr(choice.Value)));
+                }
+                combo.SelectedIndex = 0;
+                combo.Width = 160;
+                m_PluginControls[option.Id] = combo;
+                AddField(card, L.Tr(option.Title), combo, option.Hint == null ? null : L.Tr(option.Hint));
+                combo.Width = 160;
+            }
+        }
+
+        /// <summary>Campo que so vale com um toggle ligado (ex.: espera do teleporte) fica desativado sem ele.</summary>
+        private void WirePluginDependencies()
+        {
+            foreach (var option in PluginOptions.All.Where(o => o.DependsOn != null))
+            {
+                if (!m_PluginControls.TryGetValue(option.Id, out var target))
+                {
+                    continue;
+                }
+                var toggles = option.DependsOn.Select(id => m_PluginControls.TryGetValue(id, out var c) ? c as ToggleSwitch : null)
+                    .Where(t => t != null).ToList();
+                EventHandler update = (s, e) => target.Enabled = toggles.Any(t => t.Checked);
+                foreach (var toggle in toggles)
+                {
+                    toggle.CheckedChanged += update;
+                }
+                update(null, EventArgs.Empty);
+            }
         }
 
         private Control BuildPluginsPage()
@@ -458,7 +555,7 @@ namespace Skalia.Launcher
                 m_Pages[i].Visible = i == index;
                 m_Nav[i].Selected = i == index;
             }
-            if (index == 2 && m_Log != null)
+            if (index == m_Pages.Count - 1 && m_Log != null)
             {
                 m_Log.SelectionStart = m_Log.TextLength;
                 m_Log.ScrollToCaret();
@@ -472,6 +569,7 @@ namespace Skalia.Launcher
                 return;
             }
             var advanced = m_Advanced.Visible;
+            var devOpen = m_Dev.Visible;
             var page = m_Pages.FindIndex(p => p.Visible);
             var log = m_Log.Text;
             if (m_Paths.U3DSDir != null)
@@ -499,6 +597,7 @@ namespace Skalia.Launcher
             m_Pages.Clear();
             m_PluginToggles.Clear();
             m_RuleCombos.Clear();
+            m_PluginControls.Clear();
             BuildUi();
             if (m_Paths.U3DSDir != null)
             {
@@ -506,6 +605,7 @@ namespace Skalia.Launcher
             }
             m_Log.Text = log;
             SetAdvancedVisible(advanced);
+            SetDevVisible(devOpen);
             ShowPage(Math.Max(0, page));
             ResumeLayout(true);
             Tick();
@@ -515,6 +615,12 @@ namespace Skalia.Launcher
         {
             m_Advanced.Visible = visible;
             m_AdvancedHeader.Text = (visible ? "▾  " : "▸  ") + L.Tr("Configurações avançadas");
+        }
+
+        private void SetDevVisible(bool visible)
+        {
+            m_Dev.Visible = visible;
+            m_DevHeader.Text = (visible ? "▾  " : "▸  ") + L.Tr("Desenvolvedor");
         }
 
         private static Image LoadLogo()
@@ -544,6 +650,27 @@ namespace Skalia.Launcher
             m_BotCount.Value = Clamp(m_Settings.BotCount, m_BotCount);
             m_BotNames.Text = string.Join(Environment.NewLine, m_Settings.BotNames);
             m_AutoCallBots.Checked = m_Settings.AutoCallBots;
+            m_BotLogs.Checked = m_Settings.BotLogs;
+            foreach (var option in PluginOptions.All)
+            {
+                if (!m_PluginControls.TryGetValue(option.Id, out var control))
+                {
+                    continue;
+                }
+                var value = PluginOptions.Value(m_Settings.PluginOptions, option);
+                if (control is ToggleSwitch toggle)
+                {
+                    toggle.Checked = value == "true";
+                }
+                else if (control is ComboBox combo)
+                {
+                    var match = combo.Items.Cast<Choice>().FirstOrDefault(c => c.Value == value);
+                    if (match != null)
+                    {
+                        combo.SelectedItem = match;
+                    }
+                }
+            }
 
             m_MaxPlayers.Value = Clamp(m_Settings.MaxPlayers, m_MaxPlayers);
             SelectChoice(m_Perspective, m_Settings.Perspective, "Both");
@@ -630,6 +757,18 @@ namespace Skalia.Launcher
                 AppendLog(L.Tr("Nomes gerados para ") + generated.Count + L.Tr(" bot(s): ") + string.Join(", ", generated));
             }
             m_Settings.AutoCallBots = m_AutoCallBots.Checked;
+            m_Settings.BotLogs = m_BotLogs.Checked;
+            foreach (var pair in m_PluginControls)
+            {
+                if (pair.Value is ToggleSwitch toggle)
+                {
+                    m_Settings.PluginOptions[pair.Key] = toggle.Checked ? "true" : "false";
+                }
+                else if (pair.Value is ComboBox combo && combo.SelectedItem is Choice choice)
+                {
+                    m_Settings.PluginOptions[pair.Key] = choice.Value;
+                }
+            }
 
             m_Settings.MaxPlayers = (int)m_MaxPlayers.Value;
             m_Settings.Perspective = ChoiceValue(m_Perspective, "Both");
@@ -686,6 +825,7 @@ namespace Skalia.Launcher
             try
             {
                 ReadUiIntoSettings();
+                AppendLog(L.Tr("SKALIA é um projeto gratuito e de código aberto: github.com/Rafael7121/Skalia. Se você pagou por ele, foi enganado."));
                 var owner = m_Paths.FindCurrentSteamId();
                 await System.Threading.Tasks.Task.Run(() => m_Server.PrepareProfile(m_Settings, owner));
                 m_LogPosition = File.Exists(m_Paths.ServerLogFile) ? new FileInfo(m_Paths.ServerLogFile).Length : 0;

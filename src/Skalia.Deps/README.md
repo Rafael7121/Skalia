@@ -30,7 +30,9 @@ server list.
 
 `config.yaml` holds every setting with a comment above it. The launcher writes
 `serverBot:autoCallOnStart` and `lootAmount:spawnFactor` itself. Player-facing
-messages are in `translations.yaml` (Brazilian Portuguese).
+messages are in `translations.yaml` (Brazilian Portuguese, embedded in the DLL)
+and `translations.en.yaml` (English). The launcher uses the one that matches its
+own language; add new keys to both files.
 
 ## Building
 

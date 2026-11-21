@@ -364,17 +364,48 @@ namespace Skalia.Launcher
             {
                 return;
             }
+            ApplyDepsLanguage(settings, dir);
             var text = File.ReadAllText(config);
             var value = settings.AutoCallBots ? "true" : "false";
             text = Regex.IsMatch(text, @"(?m)^  autoCallOnStart:")
                 ? Regex.Replace(text, @"(?m)^(  autoCallOnStart:)\s*\S+", "$1 " + value)
                 : Regex.Replace(text, @"(?m)^serverBot:\r?\n", "serverBot:\n  autoCallOnStart: " + value + "\n");
+            text = SetYamlKey(text, "serverBot", "botLogs", settings.BotLogs ? "true" : "false",
+                "# SKALIA: log detalhado dos bots (opcao Desenvolvedor do launcher). false = so avisos e erros.");
+            text = PluginOptions.Apply(text, settings.PluginOptions);
+            // Dicas automaticas do chat eram de outro servidor (California 2, em portugues).
+            text = PluginOptions.SetPath(text, "automaticMessages:enabled", "false");
             var factor = GameRules.LootSpawnFactor(settings.GameRules, settings.Difficulty)
                 .ToString("0.###", CultureInfo.InvariantCulture);
             text = Regex.IsMatch(text, @"(?m)^  spawnFactor:")
                 ? Regex.Replace(text, @"(?m)^(  spawnFactor:)\s*\S+", "$1 " + factor)
                 : text.TrimEnd('\r', '\n') + "\n\nlootAmount:\n  # SKALIA: itens por ponto de loot (regra Quantidade de loot); acima de 1 o SKALIA DEPS poe os extras.\n  spawnFactor: " + factor + "\n";
             File.WriteAllText(config, text, new UTF8Encoding(false));
+        }
+
+        /// <summary>
+        /// Mensagens do plugin no idioma do launcher. Ingles: copia o translations.en.yaml que vem
+        /// em plugins. Portugues: apaga o arquivo para o plugin extrair o dele (embutido, sempre atual).
+        /// </summary>
+        private void ApplyDepsLanguage(SkaliaSettings settings, string dir)
+        {
+            var target = Path.Combine(dir, "translations.yaml");
+            var english = Path.Combine(m_Paths.PluginsSourceDir, "Skalia.Deps.translations.en.yaml");
+            try
+            {
+                if (settings.Language != "pt-BR" && File.Exists(english))
+                {
+                    File.Copy(english, target, true);
+                }
+                else
+                {
+                    TryDelete(target);
+                }
+            }
+            catch (Exception ex)
+            {
+                m_Log(L.Tr("Não foi possível trocar o idioma das mensagens do jogo: ") + ex.Message);
+            }
         }
 
         // Maximo de cada habilidade (PlayerSkills.InitializePlayer), na ordem gravada em Skills.dat.
@@ -450,6 +481,21 @@ namespace Skalia.Launcher
             {
                 m_Log(L.Tr("Habilidades iniciais aplicadas a personagens existentes: ") + updated + ".");
             }
+        }
+
+        /// <summary>Grava "  chave: valor" dentro de uma secao de topo do YAML (cria se faltar).</summary>
+        private static string SetYamlKey(string text, string section, string key, string value, string comment)
+        {
+            var keyPattern = @"(?m)^(  " + Regex.Escape(key) + @":)[ \t]*[^\s#]*";
+            if (Regex.IsMatch(text, keyPattern))
+            {
+                return Regex.Replace(text, keyPattern, "$1 " + value);
+            }
+            var sectionPattern = @"(?m)^" + Regex.Escape(section) + @":[ \t]*\r?\n";
+            var entry = "  " + comment + "\n  " + key + ": " + value + "\n";
+            return Regex.IsMatch(text, sectionPattern)
+                ? Regex.Replace(text, sectionPattern, m => m.Value + entry, RegexOptions.None)
+                : text.TrimEnd('\r', '\n') + "\n\n" + section + ":\n" + entry;
         }
 
         private void DisableBrokenWorkshopDefinitions()

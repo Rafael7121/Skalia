@@ -24,6 +24,9 @@ namespace Skalia.Launcher
         [DataMember] public int BotCount { get; set; } = 4;
         [DataMember] public List<string> BotNames { get; set; } = new List<string>();
         [DataMember] public bool AutoCallBots { get; set; } = true;
+        [DataMember] public bool BotLogs { get; set; } = false;
+        /// <summary>Opcoes do SKALIA DEPS por caminho no config.yaml (PluginOptions).</summary>
+        [DataMember] public Dictionary<string, string> PluginOptions { get; set; } = new Dictionary<string, string>();
 
         [DataMember] public Dictionary<string, string> GameRules { get; set; } = new Dictionary<string, string>();
         [DataMember] public string WelcomeMessage { get; set; } = "";
@@ -76,6 +79,7 @@ namespace Skalia.Launcher
             if (BotNames == null) BotNames = new List<string>();
             if (DisabledPlugins == null) DisabledPlugins = new List<string>();
             if (GameRules == null) GameRules = new Dictionary<string, string>();
+            if (PluginOptions == null) PluginOptions = new Dictionary<string, string>();
             if (WelcomeMessage == null) WelcomeMessage = "";
             if (Language != "pt-BR") Language = "en";
             if (WorkshopIds == null) WorkshopIds = new List<ulong>();
