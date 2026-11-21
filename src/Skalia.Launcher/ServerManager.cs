@@ -48,6 +48,28 @@ namespace Skalia.Launcher
 
         public bool IsReady => IsRunning && File.Exists(m_Paths.ReadyFile);
 
+        /// <summary>Percentual da malha dos bots enquanto o plugin a gera; null se nao esta gerando.</summary>
+        public int? BotMeshPercent
+        {
+            get
+            {
+                try
+                {
+                    if (!File.Exists(m_Paths.LoadingFile))
+                    {
+                        return null;
+                    }
+                    var text = File.ReadAllText(m_Paths.LoadingFile).Trim();
+                    return int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var percent)
+                        ? Math.Max(0, Math.Min(100, percent)) : 0;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
         // ---------------------------------------------------------------- mapas
 
         public List<MapEntry> DiscoverMaps(IEnumerable<ulong> workshopIds)
@@ -153,6 +175,7 @@ namespace Skalia.Launcher
             DisableBrokenWorkshopDefinitions();
             ApplyStartSkillsToSaves(settings);
             TryDelete(m_Paths.ReadyFile);
+            TryDelete(m_Paths.LoadingFile);
             TryDelete(m_Paths.StopFile);
         }
 
@@ -192,7 +215,7 @@ namespace Skalia.Launcher
                 lines.Add("Owner " + ownerSteamId.ToString(CultureInfo.InvariantCulture));
             }
             File.WriteAllLines(Path.Combine(m_Paths.ProfileDir, "Server", "Commands.dat"), lines, new UTF8Encoding(false));
-            m_Log(L.Tr("Commands.dat gravado (mapa ") + settings.Map + L.Tr(", porta ") + settings.Port + ").");
+            m_Log(L.Tr("Mapa ") + settings.Map + L.Tr(", porta ") + settings.Port + ".");
         }
 
         private void WriteWorkshopConfig(SkaliaSettings settings)
@@ -303,7 +326,6 @@ namespace Skalia.Launcher
                 return;
             }
             CopyDirectory(source, target);
-            m_Log(L.Tr("Pacotes do OpenMod reaproveitados."));
         }
 
         private void InstallPlugins(SkaliaSettings settings)
@@ -320,13 +342,16 @@ namespace Skalia.Launcher
                         || new FileInfo(source).Length != new FileInfo(target).Length)
                     {
                         File.Copy(source, target, overwrite: true);
-                        m_Log(L.Tr("Plugin instalado: ") + name);
+                        if (!string.Equals(name, "SkaliaDeps.dll", StringComparison.OrdinalIgnoreCase))
+                        {
+                            m_Log(L.Tr("Plugin instalado: ") + Path.GetFileNameWithoutExtension(name));
+                        }
                     }
                 }
                 else if (File.Exists(target))
                 {
                     File.Delete(target);
-                    m_Log(L.Tr("Plugin desativado: ") + name);
+                    m_Log(L.Tr("Plugin desativado: ") + Path.GetFileNameWithoutExtension(name));
                 }
             }
         }
@@ -539,7 +564,7 @@ namespace Skalia.Launcher
             };
             m_Process = Process.Start(info);
             File.WriteAllText(m_Paths.PidFile, m_Process.Id.ToString(CultureInfo.InvariantCulture));
-            m_Log(L.Tr("Servidor LAN iniciado (processo ") + m_Process.Id + L.Tr("). Carregando o mapa..."));
+            m_Log(L.Tr("Servidor iniciado. Carregando o mapa..."));
         }
 
         public void RequestStop()
@@ -561,6 +586,7 @@ namespace Skalia.Launcher
                 m_Log(L.Tr("Servidor encerrado à força (o progresso desde o último salvamento pode ser perdido)."));
             }
             TryDelete(m_Paths.ReadyFile);
+            TryDelete(m_Paths.LoadingFile);
         }
 
         private Process FindProcess()

@@ -28,6 +28,8 @@ namespace Skalia.Launcher
         public string SettingsFile => Path.Combine(SkaliaDir, "skalia.json");
         public string ServerLogFile => Path.Combine(U3DSDir, "Logs", "Server_" + ProfileId + ".log");
         public string ReadyFile => Path.Combine(ProfileDir, "skalia.ready");
+        /// <summary>Escrito pelo SKALIA DEPS enquanto gera a malha dos bots: percentual 0-100.</summary>
+        public string LoadingFile => Path.Combine(ProfileDir, "skalia.loading");
         public string StopFile => Path.Combine(ProfileDir, "skalia.stop");
         public string PidFile => Path.Combine(SkaliaDir, "server.pid");
         public string SteamExe => SteamDir == null ? null : Path.Combine(SteamDir, "steam.exe");

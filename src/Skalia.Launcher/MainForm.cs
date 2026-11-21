@@ -39,7 +39,9 @@ namespace Skalia.Launcher
         private TextBox m_Name, m_Welcome, m_Password, m_BotNames, m_Workshop, m_Log;
         private Dropdown m_Map, m_Difficulty, m_Perspective;
         private NumberBox m_MaxPlayers, m_Port, m_BotCount;
-        private ToggleSwitch m_PvP, m_Cheats, m_ShowConsole, m_AutoCallBots, m_BotLogs;
+        private ToggleSwitch m_PvP, m_Cheats, m_ShowConsole, m_AutoCallBots, m_BotLogs, m_FullServerLog;
+        private int m_LastMeshStep = -1;
+        private bool m_ShowingTrace;
         private Panel m_Dev;
         private Label m_DevHeader;
         private FlowLayoutPanel m_PluginList;
@@ -313,6 +315,9 @@ namespace Skalia.Launcher
             var dev = NewCard();
             AddWide(dev, Hint(L.Tr("Só mexa aqui se você sabe o que está fazendo.")));
             AddWide(dev, m_BotLogs);
+            m_FullServerLog = new ToggleSwitch(L.Tr("Log completo do servidor"), L.Tr("Mostra no Console tudo o que o servidor escreve. Desligado, só avisos e erros."));
+            AddWide(dev, m_FullServerLog);
+            m_FullServerLog.CheckedChanged += (s, e) => m_Settings.FullServerLog = m_FullServerLog.Checked;
             Stack(m_Dev, dev);
             Stack(page, m_Dev);
             Stack(page, Spacer(PageBottom));
@@ -763,6 +768,7 @@ namespace Skalia.Launcher
             m_BotNames.Text = string.Join(Environment.NewLine, m_Settings.BotNames);
             m_AutoCallBots.Checked = m_Settings.AutoCallBots;
             m_BotLogs.Checked = m_Settings.BotLogs;
+            m_FullServerLog.Checked = m_Settings.FullServerLog;
             foreach (var option in PluginOptions.All)
             {
                 if (!m_PluginControls.TryGetValue(option.Id, out var control))
@@ -871,6 +877,7 @@ namespace Skalia.Launcher
             }
             m_Settings.AutoCallBots = m_AutoCallBots.Checked;
             m_Settings.BotLogs = m_BotLogs.Checked;
+            m_Settings.FullServerLog = m_FullServerLog.Checked;
             foreach (var pair in m_PluginControls)
             {
                 if (pair.Value is ToggleSwitch toggle)
@@ -1004,9 +1011,20 @@ namespace Skalia.Launcher
             }
             var running = m_Server.IsRunning;
             var ready = running && m_Server.IsReady;
+            var mesh = running && !ready ? m_Server.BotMeshPercent : null;
+            if (mesh.HasValue && mesh.Value / 10 != m_LastMeshStep)
+            {
+                // Progresso no Console a cada 10%.
+                m_LastMeshStep = mesh.Value / 10;
+                AppendLog(L.Tr("Preparando os bots: ") + (m_LastMeshStep * 10) + "%");
+            }
+            if (!running || ready)
+            {
+                m_LastMeshStep = -1;
+            }
             if (ready && !m_WasReady)
             {
-                AppendLog(L.Tr("Servidor pronto."));
+                AppendLog(L.Tr("Servidor pronto. Clique em ENTRAR NO JOGO."));
             }
             m_WasReady = ready;
             if (!running)
@@ -1026,6 +1044,10 @@ namespace Skalia.Launcher
             else if (ready)
             {
                 SetStatus(L.Tr("Servidor online"), Theme.Good, L.Tr("Clique em ENTRAR NO JOGO."));
+            }
+            else if (mesh.HasValue)
+            {
+                SetStatus(L.Tr("Preparando os bots... ") + mesh.Value + "%", Theme.Warn, L.Tr("O mapa carregou; os bots estão aprendendo o caminho."));
             }
             else
             {
@@ -1091,11 +1113,7 @@ namespace Skalia.Launcher
                     foreach (var line in text.Split('\n'))
                     {
                         var trimmed = line.TrimEnd('\r');
-                        if (trimmed.Length > 0
-                            && !trimmed.Contains(" asset file contents into memory")
-                            && !trimmed.Contains("] Loaded ")
-                            && !trimmed.Contains("Discovered assembly")
-                            && !trimmed.Contains("] Searched "))
+                        if (ShowServerLine(trimmed))
                         {
                             AppendLog(trimmed);
                         }
@@ -1105,6 +1123,34 @@ namespace Skalia.Launcher
             catch
             {
             }
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex ProblemLine =
+            new System.Text.RegularExpressions.Regex(@"\b(WRN|ERR|FTL|Warning|Error|Exception)\b", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        /// <summary>
+        /// O Console e para quem joga: do log do servidor so passam avisos e erros (com o stack trace
+        /// logo abaixo). "Log completo do servidor" em Desenvolvedor mostra tudo.
+        /// </summary>
+        private bool ShowServerLine(string line)
+        {
+            if (line.Length == 0)
+            {
+                return false;
+            }
+            if (m_Settings.FullServerLog)
+            {
+                return !line.Contains(" asset file contents into memory")
+                    && !line.Contains("] Loaded ")
+                    && !line.Contains("Discovered assembly")
+                    && !line.Contains("] Searched ");
+            }
+            if (m_ShowingTrace && (line.StartsWith(" ") || line.StartsWith("\t") || line.StartsWith("---")))
+            {
+                return true;
+            }
+            m_ShowingTrace = ProblemLine.IsMatch(line);
+            return m_ShowingTrace;
         }
 
         private void AppendLog(string line)

@@ -25,6 +25,8 @@ namespace Skalia.Launcher
         [DataMember] public List<string> BotNames { get; set; } = new List<string>();
         [DataMember] public bool AutoCallBots { get; set; } = true;
         [DataMember] public bool BotLogs { get; set; } = false;
+        /// <summary>Console mostra todo o log do servidor (padrao: so avisos e erros).</summary>
+        [DataMember] public bool FullServerLog { get; set; } = false;
         /// <summary>Opcoes do SKALIA DEPS por caminho no config.yaml (PluginOptions).</summary>
         [DataMember] public Dictionary<string, string> PluginOptions { get; set; } = new Dictionary<string, string>();
         /// <summary>Kit inicial editado por mapa (texto da caixa). Mapa sem entrada usa o kit de exemplo.</summary>

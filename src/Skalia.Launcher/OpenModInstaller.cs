@@ -73,7 +73,7 @@ namespace Skalia.Launcher
             {
                 throw new InvalidOperationException(L.Tr("o zip baixado não tinha o arquivo OpenMod.Unturned.module."));
             }
-            log(L.Tr("OpenMod instalado em ") + ModuleDir(paths) + ".");
+            log(L.Tr("OpenMod instalado."));
         }
 
         /// <summary>
