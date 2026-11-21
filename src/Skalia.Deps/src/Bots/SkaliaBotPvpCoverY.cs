@@ -137,7 +137,7 @@ namespace SkaliaDeps
             return hit.distance > Mathf.Max(PvpOwnCoverMinMeters, length * PvpOwnCoverShare);
         }
 
-        // 0.1.0-y17.18 (same test, 00:55:49-00:56:31): Vultox, back to Onca
+        // 0.1.0-y17.18 (same test, 00:55:49-00:56:31): Vultox, back to the other player
         // after killing TheGhostSniper, knew him only by a shot (sector 173
         // degrees +-76) and took a spot hidden from the middle of the sector
         // only; he was on the overpass at the sector's edge, 61m, and shot it

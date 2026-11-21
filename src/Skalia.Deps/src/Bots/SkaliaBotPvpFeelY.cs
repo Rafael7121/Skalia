@@ -6,8 +6,8 @@ using UnityEngine;
 namespace SkaliaDeps
 {
     // 0.2.2y (the tester, 16/11: "use as gravações ... para deixar eles menos
-    // robotizados"): how the players of the night of 08/11 (Onça, Zebraum,
-    // Natanick, Xane, zombie) moved and pulled the trigger while shooting
+    // robotizados"): how the players of the night of 08/11 (five
+    // players) moved and pulled the trigger while shooting
     // at each other. 554 recording rows (10 a second) with the trigger down
     // and the gun within 8 degrees of another player, 43 exchanges, 18
     // players hit. The first 0.2.2y stood still, upright or crouched, and

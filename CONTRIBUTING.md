@@ -62,6 +62,9 @@ These hold for every change to the bots:
   // 20s later...
   ```
 
+- **Modifiers stay neutral at 1.** A number that has a difficulty modifier
+  (see [docs/MODIFIERS.md](docs/MODIFIERS.md)) keeps it when it changes, and 1
+  must leave the recorded behaviour exactly as it is.
 - **The game's own rules.** Bots send input packets like a client and use the
   game's checks (stamina, doors that need a key, the reach of a shot). Check the
   decompiled game code before assuming how something works.
@@ -104,7 +107,9 @@ hearing find a man, then the fight, cover, hunt and memory take over.
 | Zombies | `SkaliaBotThreat`, `SkaliaBotHordeX8`, `SkaliaBotHordeCommitY`, `SkaliaBotZombieCrowdX14`, `SkaliaBotZombieFootworkX13`, `SkaliaBotMegaX8` |
 | Recorder | `SkaliaPlayerRecorder` |
 
-Settings live under `serverBot:` in `src/Skalia.Deps/config.yaml`.
+Settings live under `serverBot:` in `src/Skalia.Deps/config.yaml`; the
+difficulty multipliers under `serverBot:modifiers` are described in
+[docs/MODIFIERS.md](docs/MODIFIERS.md).
 
 ## Testing a build
 
@@ -158,6 +163,12 @@ The columns:
 The file names carry the player's Steam ID, so keep raw recordings out of the
 repository. `tools/recordings` has scripts that compare bots and players; see
 its README.
+
+Comments in the bot code cite the analysis scripts of the original work
+(`rec/pvp9.py`, `rec2/botaim2.py`, `rec3/predict.py`...). Those scripts read
+recordings that are not public; the reusable parts (the loader, movement,
+fights and after-fight measurements) are in `tools/recordings`. The players in
+the recordings are not named in the code.
 
 ## Reporting a bot problem
 

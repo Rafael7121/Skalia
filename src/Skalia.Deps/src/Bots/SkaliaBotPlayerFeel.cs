@@ -19,8 +19,8 @@ namespace SkaliaDeps
         // (80-95% of it, the hand is not perfect) and the rest is corrected
         // faster than a walking turn.
         //
-        // How fast: measured on the players' recordings (zombie, NATANICK,
-        // Onca_do_BOPE, DELUXE_ZEBRAUM, XaneBareBR; 6806 samples with a zombie
+        // How fast: measured on the players' recordings (five players;
+        // 6806 samples with a zombie
         // within 3m): yaw median 15/s, p90 140/s, p95 216/s, p99 448/s;
         // swinging, p90 64-140/s. The whole turn (following plus correcting)
         // stays under each bot's own ceiling of 300-450 degrees a second, the
@@ -348,7 +348,7 @@ namespace SkaliaDeps
                     return true;
                 }
                 // 0.2.2x8: from a place the game's grab check passes
-                // (SkaliaBotLadderX8), Onça's way; the next tick sees the
+                // (SkaliaBotLadderX8), the other player's way; the next tick sees the
                 // climb.
                 if (!m_LadderBackOff && SteerLadderGrab(ladder, position, now, out _))
                 {

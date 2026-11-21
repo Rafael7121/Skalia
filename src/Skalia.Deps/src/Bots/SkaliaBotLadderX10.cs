@@ -24,7 +24,7 @@ namespace SkaliaDeps
     // gap the bot keeps W into the ladder and, if that does not take it,
     // looks at it and uses it.
     //
-    // Down fast: the tester (2026-11-08 22:41, 301s) and Onça (00:59, 683s) do
+    // Down fast: the tester (2026-11-08 22:41, 301s) and the other player (00:59, 683s) do
     // not hold S. They turn the body off the ladder, fall a few meters and
     // turn back: the game takes the ladder in the air and the fall speed is
     // gone (10m in 1.5s). The bot holding S spent 13-23s on the metal
@@ -320,7 +320,7 @@ namespace SkaliaDeps
             if ((wholeWay || heightLeft <= 2f) && !m_Player.movement.isGrounded)
             {
                 // The rest is under the fall damage height: down in one go,
-                // like Onça's last 5m.
+                // like the other player's last 5m.
                 m_NavigationAnalog = 0x11;
                 m_IsWalking = false;
                 return true;

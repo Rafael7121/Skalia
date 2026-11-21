@@ -489,14 +489,14 @@ namespace SkaliaDeps
 
         // 0.1.0-y17.19 (the tester, 19/11: "ele ficou olhando pra direcao do
         // ghost depois de ter matado ele e nao voltou a atencao para o
-        // onca"). Test of 19/11, Vultox: hunting Onça by sound (sector 317,
+        // the other player"). Test of 19/11, Vultox: hunting the other player by sound (sector 317,
         // 00:54:50), it heard TheGhostSniper's round at it at 00:55:44 and
-        // took it as Onça's (any round in a fight with a man not yet seen
+        // took it as the other player's (any round in a fight with a man not yet seen
         // was his): the sector went to 173 +-76, Ghost's side. Ghost's
         // round hit it the same second, it turned on Ghost and remembered
-        // Onça "de onde veio o tiro" there; Ghost dead, it went back to
-        // Onça on that point and lay 40s (00:55:50-00:56:30) facing 161
-        // degrees, Ghost's body at 111, while Onça crawled up from 333-37
+        // the other player "de onde veio o tiro" there; Ghost dead, it went back to
+        // the other player on that point and lay 40s (00:55:50-00:56:30) facing 161
+        // degrees, Ghost's body at 111, while the other player crawled up from 333-37
         // degrees and shot it from 61m (81 to 19). Now the round heard is
         // kept as whose it was, with the clue on the old man before it; on
         // turning to the new man for a round of his that hit it, or for

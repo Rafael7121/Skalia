@@ -6,13 +6,13 @@ namespace SkaliaDeps
 {
     // 0.2.2x9 (doc 16.17): ladders the way the players' recordings show.
     //
-    // Up (34 climbs of the tester, Onça, DELUXE, XaneBareBR): walk or run into
+    // Up (34 climbs of four players): walk or run into
     // it facing it and hold W (2.7 m/s up). Where the ladder starts high (the
     // Ladder_Metal_0 by the barracks) they stop at the foot, look up at it
     // (pitch 39-64) and take it (the use key: the game puts them on it
     // 2.7m up). The bot did only the walk-in and failed there.
     //
-    // Down: Onça looks down at it from the roof (60 degrees) and takes it;
+    // Down: the other player looks down at it from the roof (60 degrees) and takes it;
     // the tester, facing the wall as when he climbed, walks backwards off the
     // edge and the ladder in front of him catches him. On it, both hold S
     // and slide down at 2.7 m/s (PlayerMovement: climbing speed is the W/S
@@ -131,7 +131,7 @@ namespace SkaliaDeps
             m_StealthCrouch = false;
             m_IsSprinting = false;
             // 0.2.2x10: drop a few meters and catch it again, like the tester and
-            // Onca (SkaliaBotLadderX10).
+            // the other player (SkaliaBotLadderX10).
             if (SteerLadderDrop(ladder, position, now, climbing, holdYaw))
             {
                 return true;

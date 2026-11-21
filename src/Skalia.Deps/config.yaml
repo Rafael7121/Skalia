@@ -200,20 +200,15 @@ chat:
 
 automaticMessages:
   # Envia uma mensagem para todos os jogadores conectados no intervalo abaixo.
-  enabled: true
+  # SKALIA: desligado por padrao (o launcher grava esta chave).
+  enabled: false
   intervalSeconds: 720
 
   # As mensagens são exibidas em sequência e aceitam a formatação rich text do Unturned.
   messages:
-    - "Em California 2, confira a categoria da munição compatível antes de recarregar sua arma."
-    - "Carvão é um recurso valioso em California 2, usado na produção de filtros e aço."
-    - "A impressora 3D é uma bancada importante para produzir filtros e copiar determinados itens."
-    - "Para fabricar munição e explosivos, procure e utilize uma Bancada de Armas."
-    - "Cartões de acesso são essenciais para avançar e abrir esconderijos espalhados por California 2."
-    - "Servidores são raros, mas oferecem uma boa fonte de componentes eletrônicos."
-    - "Assaltar bancos pode render recursos valiosos, mas prepare-se antes de entrar."
-    - "As cavernas sob California 2 são profundas; leve suprimentos e planeje a saída."
-    - "A floresta queimada acima de Toulumne possui bastante carvão."
+    - "Use /tpa para pedir teleporte até outro jogador e /home para voltar à sua cama."
+    - "O /vault é o seu armazenamento privado e persistente."
+    - "Use /sort para organizar o inventário."
 
 groundCleanup:
   # A varredura ocorre a cada 10 minutos e preserva itens mais novos que 400 segundos.

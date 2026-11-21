@@ -16,8 +16,11 @@ every start and it cannot be turned off.
 - **Server rules**: spawn loadouts per map, extra zombies per region, Mega
   Zombie rewards, ground cleanup, automatic reload, extra loot above the game's
   limit.
-- **Launcher bridge**: tells the launcher when the map is ready and shuts the
-  server down cleanly when the launcher asks.
+- **Launcher bridge**: files in the server's profile folder. `skalia.loading`
+  holds the progress (0 to 100) while the bots' navmesh is built, and
+  `skalia.ready` appears once the map and the navmesh are done. The bots join
+  only after that. `skalia.stop`, written by the launcher, saves and shuts the
+  server down.
 - **Development tools** used to record players and tune the bots (`/gravar`,
   `/malhanova`, `/malhateste`, `/passagem`, `/irpara`, `/navbot`, `/navid`,
   `/zumbis`).
@@ -28,8 +31,20 @@ server list.
 
 ## Configuration
 
-`config.yaml` holds every setting with a comment above it. The launcher writes
-`serverBot:autoCallOnStart` and `lootAmount:spawnFactor` itself. Player-facing
+`config.yaml` holds every setting with a comment above it. Everything is read
+when the plugin loads. The launcher writes these keys before it starts the
+server:
+
+| Key | What it does |
+|---|---|
+| `serverBot:autoCallOnStart` | Bring the registered bots in once the server is ready |
+| `serverBot:botLogs` | `true` logs the bots' Information and Debug lines; `false` keeps only warnings and errors (see [docs/LOGS.md](../../docs/LOGS.md)) |
+| `serverBot:modifiers:*` | Bot difficulty, 32 multipliers where 1 is the recorded behaviour (see [docs/MODIFIERS.md](../../docs/MODIFIERS.md)) |
+| `tpa:enabled`, `home:enabled`, `vault:enabled` | `false` turns off `/tpa`, `/home` with `/homes` and `/renomear`, or `/vault`; the command then says it is off on this server |
+| `automaticReload:enabled` | `false` turns off the automatic reload when a magazine runs dry |
+| `lootAmount:spawnFactor` | Extra loot above the game's own limit |
+
+A missing switch counts as `true`. Player-facing
 messages are in `translations.yaml` (Brazilian Portuguese, embedded in the DLL)
 and `translations.en.yaml` (English). The launcher uses the one that matches its
 own language; add new keys to both files.

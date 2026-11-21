@@ -3,7 +3,7 @@
 What is known not to work, not yet tested, or not built. Kept up to date with
 each bot version (`InformationalVersion` in `src/Skalia.Deps/Skalia.Deps.csproj`).
 
-Last update: 0.1.0-y17.37.
+Last update: 0.1.0-y17.38.
 
 ## Built but never run in a game
 
@@ -29,6 +29,7 @@ builds and loads, but no one has played against it yet:
 | y17.35 | The modifiers take any decimal within the launcher's sliders (0.25-1.75, fieldOfView 0.5-1.5), clamped outside them; one that is not a number counts as 1 |
 | y17.36 | 13 more modifiers: shotOrigin, openFireDelay (no longer under reactionTime), burstLength, burstPause, strafing, repositioning, sprinting, persistence, chase, healSpeed, hordeCourage, meleeHeadshots, swingSpeed |
 | y17.37 | 11 more modifiers: footsteps, shotAwareness, lookAround, hipFire, zombieAimSpeed, fightHops, hops, staminaReserve, gunSilence, coveredLoot, hordeEscape |
+| y17.38 | `automaticMessages` off by default, with neutral messages (the old ones were another server's map tips) |
 
 Play a session with the recorder on (`/gravar ligar`, `/gravar bots ligar`)
 before adding more on top.
@@ -43,6 +44,20 @@ before adding more on top.
 - **Reaction to a heard shot and the search for cover**: changed up to y17.19
   from the testers' reports; only 17 recorded cases after y17.11, too few to say
   whether it now matches the players.
+
+## Rules resting on few recorded cases
+
+These behaviours copy the players, but from too few cases to be sure of the
+numbers. More recordings of real fights (everyone playing to kill, recorder on)
+are the best way to improve them:
+
+| Situation | Cases |
+|---|---|
+| Reaction to a shot heard from someone unseen | 17 (after y17.11) |
+| Where a player goes after a fight, when above the other one and still | 18 |
+| Low health in the middle of a fight | 15 |
+| Hit from off the screen: found the shooter or not | 7 to 17 |
+| The aim's first move onto a man | 24 |
 
 ## Only tested on Washington
 

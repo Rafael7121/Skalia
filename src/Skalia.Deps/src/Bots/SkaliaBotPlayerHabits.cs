@@ -5,8 +5,8 @@ using UnityEngine;
 namespace SkaliaDeps
 {
     // 0.2.0: what the players do on the way and when they stop, measured on
-    // the recordings of the night of 11-08 (zombie, NATANICK, Onca, ZEBRAUM,
-    // Xane; about 6h):
+    // the recordings of the night of 11-08 (five players;
+    // about 6h):
     //   - prone or crouched 15-60% of the time: prone to take items off the
     //     floor and to bandage, crouched in stops; at night 2-3 times more;
     //   - about 4 short stops a minute of ~3s, turning the view round at

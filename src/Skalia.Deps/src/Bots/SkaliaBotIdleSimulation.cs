@@ -12332,7 +12332,7 @@ namespace SkaliaDeps
         }
 
         // 0.2.0: the head at any distance, like the players (72% of their
-        // gun hits on 11-08 were on the head, Onca's 96%; the bots, aiming at
+        // gun hits on 11-08 were on the head, one player's 96%; the bots, aiming at
         // the chest past 10m, 21%). A height inside the head band (0.82 and up) is
         // drawn per target; the gun's spread and the recoil decide the rest.
         // A crawler keeps the body center: its head sits 0.3m off the ground,

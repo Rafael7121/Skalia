@@ -10,8 +10,8 @@ namespace SkaliaDeps
     // window probe looks at 0.3 and 0.6m and saw nothing; the contact jump
     // measured the top 0.4m past the contact, which for a thin bar is the
     // road behind it, so it never fired. The bot ran into the arm until
-    // the unstuck. Recordings of players crossing that same arm (zombie,
-    // NATANICK) show the jump pressed 0.3 to 0.5s before the arm, 1.2 to
+    // the unstuck. Recordings of two players crossing that same arm
+    // show the jump pressed 0.3 to 0.5s before the arm, 1.2 to
     // 2.5m ahead, without touching it. The bot now does the same: a bar
     // with room under and over it, ahead within 0.4s of its pace, is
     // jumped before contact.

@@ -261,7 +261,7 @@ namespace SkaliaDeps
 
         // ---- item 7: blade or bullet ----
         // The players' kills of common zombies (doc 16.2): each has a style
-        // (NATANICK 91% bullet, zombie 37%, Onca 46%, DELUXE 2%); acid and
+        // (one player 91% bullet, others 37%, 46% and 2%); acid and
         // burner go to the bullet (83-87%); with 2+ zombies within 15m the
         // bullet rises to 63-75%. One choice per zombie, kept until it dies.
         private float m_GunStyle = -1f;
