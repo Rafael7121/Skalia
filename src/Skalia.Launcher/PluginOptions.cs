@@ -27,6 +27,8 @@ namespace Skalia.Launcher
         public bool Fixed { get; set; }
         /// <summary>Mostrado como slider (passos de 0.05x) em vez de lista.</summary>
         public bool Slider { get; set; }
+        /// <summary>Aba do card de dificuldade dos bots.</summary>
+        public string Tab { get; set; }
     }
 
     internal static class PluginOptions
@@ -38,6 +40,15 @@ namespace Skalia.Launcher
         public const string BotDifficulty = "Dificuldade dos bots";
         /// <summary>Perfil mostrado quando os modificadores nao batem com nenhum perfil pronto.</summary>
         public const string CustomProfile = "custom";
+
+        // Abas do card de dificuldade, na ordem da tela. Aba sem modificador nao aparece.
+        public const string TabPerception = "Percepção";
+        public const string TabAim = "Mira e tiro";
+        public const string TabMovement = "Movimento";
+        public const string TabHunt = "Caça";
+        public const string TabSurvival = "Sobrevivência";
+        public const string TabZombies = "Zumbis";
+        public static readonly string[] BotTabs = { TabPerception, TabAim, TabMovement, TabHunt, TabSurvival, TabZombies };
 
         public static readonly PluginOption[] All =
         {
@@ -73,14 +84,14 @@ namespace Skalia.Launcher
             Fixed(Toggle(BotBehavior, "serverBot:behavior:freshDeathAvoidance", null, null, true)),
 
             // Modificadores no estilo SPT: 1x = o comportamento tirado das gravacoes.
-            Slide("serverBot:modifiers:visionRange", "Alcance de visão", "Distância em que percebem jogadores e zumbis. Nunca passa do alcance da arma.", 0.25, 1.75),
-            Slide("serverBot:modifiers:fieldOfView", "Campo de visão", "Ângulo que enxergam, para os lados e para cima e baixo.", 0.5, 1.5),
-            Slide("serverBot:modifiers:hearing", "Audição", "Até onde ouvem tiros e balas passando perto.", 0.25, 1.75),
-            Slide("serverBot:modifiers:reactionTime", "Tempo de reação", "Abaixo de 1x viram e atiram mais rápido.", 0.25, 1.75),
-            Slide("serverBot:modifiers:aimSpeed", "Velocidade da mira", "Acima de 1x travam no alvo mais rápido.", 0.25, 1.75),
-            Slide("serverBot:modifiers:accuracy", "Precisão", "Acima de 1x a mira fecha mais.", 0.25, 1.75),
-            Slide("serverBot:modifiers:courage", "Coragem", "Acima de 1x lutam com menos vida antes de fugir ou se curar.", 0.25, 1.75),
-            Slide("serverBot:modifiers:cover", "Uso de cobertura", "Acima de 1x se agacham e se escondem mais.", 0.25, 1.75),
+            Slide(TabPerception, "serverBot:modifiers:visionRange", "Alcance de visão", "Distância em que percebem jogadores e zumbis. Nunca passa do alcance da arma.", 0.25, 1.75),
+            Slide(TabPerception, "serverBot:modifiers:fieldOfView", "Campo de visão", "Ângulo que enxergam, para os lados e para cima e baixo.", 0.5, 1.5),
+            Slide(TabPerception, "serverBot:modifiers:hearing", "Audição", "Até onde ouvem tiros e balas passando perto.", 0.25, 1.75),
+            Slide(TabAim, "serverBot:modifiers:reactionTime", "Tempo de reação", "Abaixo de 1x viram e atiram mais rápido.", 0.25, 1.75),
+            Slide(TabAim, "serverBot:modifiers:aimSpeed", "Velocidade da mira", "Acima de 1x travam no alvo mais rápido.", 0.25, 1.75),
+            Slide(TabAim, "serverBot:modifiers:accuracy", "Precisão", "Acima de 1x a mira fecha mais.", 0.25, 1.75),
+            Slide(TabSurvival, "serverBot:modifiers:courage", "Coragem", "Acima de 1x lutam com menos vida antes de fugir ou se curar.", 0.25, 1.75),
+            Slide(TabMovement, "serverBot:modifiers:cover", "Uso de cobertura", "Acima de 1x se agacham e se escondem mais.", 0.25, 1.75),
         };
 
         public static PluginOption Find(string id) => All.FirstOrDefault(o => o.Id == id);
@@ -119,12 +130,13 @@ namespace Skalia.Launcher
             values.Select(v => C(N(v), N(v) + "x")).ToArray();
 
         /// <summary>Modificador dos bots: slider de min a max em passos de 0.05x, padrao 1x (fica no meio).</summary>
-        private static PluginOption Slide(string path, string title, string hint, double min, double max)
+        private static PluginOption Slide(string tab, string path, string title, string hint, double min, double max)
         {
             var steps = (int)Math.Round((max - min) / 0.05);
             var choices = Enumerable.Range(0, steps + 1).Select(i => Math.Round(min + i * 0.05, 2)).ToArray();
             var option = Pick(BotDifficulty, new[] { path }, title, hint, "1", null, Times(choices));
             option.Slider = true;
+            option.Tab = tab;
             return option;
         }
 

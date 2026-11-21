@@ -267,7 +267,7 @@ namespace Skalia.Launcher
                 m_BotProfile.Items.Add(new Choice(profile.Key, L.Tr(profile.Value)));
             }
             AddField(behavior, L.Tr("Perfil"), m_BotProfile);
-            AddPluginOptions(behavior, PluginOptions.BotDifficulty);
+            AddBotModifierTabs(behavior);
             WireBotProfile();
 
             m_MaxPlayers = new NumberBox { Minimum = 1, Maximum = 200 };
@@ -362,9 +362,45 @@ namespace Skalia.Launcher
             return page.Parent;
         }
 
-        private void AddPluginOptions(TableLayoutPanel card, string group)
+        /// <summary>
+        /// Modificadores dos bots em abas (Percepcao, Mira e tiro...): cada aba mostra so as suas linhas
+        /// do card; as outras ficam escondidas e nao ocupam espaco.
+        /// </summary>
+        private void AddBotModifierTabs(TableLayoutPanel card)
         {
-            foreach (var option in PluginOptions.All.Where(o => o.Group == group && !o.Fixed))
+            var strip = new TabStrip { Width = WideWidth, Margin = new Padding(0, RowGap + 6, 0, RowGap + 4) };
+            AddWide(card, strip);
+            var pages = new List<List<Control>>();
+            foreach (var tab in PluginOptions.BotTabs)
+            {
+                if (!PluginOptions.All.Any(o => o.Group == PluginOptions.BotDifficulty && o.Tab == tab))
+                {
+                    continue;
+                }
+                strip.Add(L.Tr(tab));
+                var before = card.Controls.Count;
+                AddPluginOptions(card, PluginOptions.BotDifficulty, tab);
+                pages.Add(card.Controls.Cast<Control>().Skip(before).ToList());
+            }
+            void Show()
+            {
+                card.SuspendLayout();
+                for (var i = 0; i < pages.Count; i++)
+                {
+                    foreach (var control in pages[i])
+                    {
+                        control.Visible = i == strip.SelectedIndex;
+                    }
+                }
+                card.ResumeLayout();
+            }
+            strip.SelectedIndexChanged += (s, e) => Show();
+            Show();
+        }
+
+        private void AddPluginOptions(TableLayoutPanel card, string group, string tab = null)
+        {
+            foreach (var option in PluginOptions.All.Where(o => o.Group == group && !o.Fixed && (tab == null || o.Tab == tab)))
             {
                 if (option.IsToggle)
                 {
