@@ -257,7 +257,8 @@ namespace SkaliaDeps
                 m_PvpMeleeImpactSimulation = packetSimulation + m_PvpMeleeIntervalFrames;
                 m_PvpMeleePending = true;
                 m_PvpMeleeRepeating = best.isRepeated;
-                m_NextAttackTime = now + Mathf.Max(0.44f, length + 0.08f);
+                // 0.1.0-y17.36: over serverBot:modifiers:swingSpeed, never under the swing.
+                m_NextAttackTime = now + Mathf.Max(0.44f / SkaliaBotModifiers.SwingSpeed, length + 0.08f / SkaliaBotModifiers.SwingSpeed);
             }
             m_PvpShots++;
             m_PvpLastPullAt = now;

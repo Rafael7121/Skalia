@@ -16,7 +16,8 @@ namespace SkaliaDeps
     internal sealed partial class SkaliaBotIdleSimulation
     {
         // 0.1.0-y16: 5 minutes, 60s before (SkaliaBotPvpSpotY).
-        private const float PvpMemorySeconds = 300f;
+        // 0.1.0-y17.36: times serverBot:modifiers:persistence.
+        private static float PvpMemorySeconds => 300f * SkaliaBotModifiers.Persistence;
         private const float PvpLookAfterLostSeconds = 6f;
         // 0.1.0-y17.34: times serverBot:modifiers:visionRange.
         private static float PvpMaxMeters => 250f * SkaliaBotModifiers.VisionRange;
@@ -139,7 +140,7 @@ namespace SkaliaDeps
                     // (SkaliaBotPvpMemoryY).
                     var attackerEye = attacker.look?.aim != null ? attacker.look.aim.position : attacker.transform.position + Vector3.up * 1.6f;
                     var toAttacker = attackerEye - m_Player.look.aim.position;
-                    var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) * (Random.value < 0.5f ? -1f : 1f);
+                    var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) / SkaliaBotModifiers.ShotOrigin * (Random.value < 0.5f ? -1f : 1f);
                     RememberPvpOtherAt(attacker,
                         m_Player.transform.position + Quaternion.Euler(0f, error, 0f) * new Vector3(toAttacker.x, 0f, toAttacker.z),
                         now,
@@ -1137,7 +1138,7 @@ namespace SkaliaDeps
             // (SkaliaBotPvpSprayY).
             m_PvpTriggerUntil = IsPvpSprayRange(readyGun, distance)
                 ? now + PvpSpraySeconds
-                : now + DrawFromQuantiles(s_PvpStepQuantiles, s_PvpHoldSeconds);
+                : now + DrawFromQuantiles(s_PvpStepQuantiles, s_PvpHoldSeconds) * SkaliaBotModifiers.BurstLength;
             // A semi gun fires once per pull: the next pull waits its rate.
             m_NextAttackTime = now + Mathf.Max(0.18f, (gun.firerate + 1f) * 0.02f);
             // Without ballistics the hit is answered on this packet itself

@@ -34,8 +34,10 @@ serverBot:
   # Dificil e Tryhard). Multiplicam as bases das gravacoes dos jogadores;
   # 1 ou ausente = como gravado. De 0.25 a 1.75 (fieldOfView de 0.5 a 1.5),
   # qualquer decimal com ponto. reactionTime menor = mais
-  # rapido; courage maior = foge e cura com menos vida. fightDistance e
-  # looting nao tem base gravada e ficam sem efeito.
+  # rapido, openFireDelay menor = atira antes; courage maior = foge e cura
+  # com menos vida. fightDistance, looting, nightVision, headshots,
+  # recoilControl, flanking e fleeWhenHurt nao tem base gravada e ficam
+  # sem efeito.
   modifiers:
     visionRange: 1
     fieldOfView: 1
@@ -47,6 +49,19 @@ serverBot:
     fightDistance: 1
     cover: 1
     looting: 1
+    shotOrigin: 1
+    openFireDelay: 1
+    burstLength: 1
+    burstPause: 1
+    strafing: 1
+    repositioning: 1
+    sprinting: 1
+    persistence: 1
+    chase: 1
+    healSpeed: 1
+    hordeCourage: 1
+    meleeHeadshots: 1
+    swingSpeed: 1
   ipAddress: "127.0.0.2"
   port: 27018
   respawnDelaySeconds: 3

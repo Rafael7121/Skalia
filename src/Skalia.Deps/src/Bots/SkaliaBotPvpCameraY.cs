@@ -47,7 +47,7 @@ namespace SkaliaDeps
                 // As long as the players took from a man in view to their
                 // first shot (SkaliaBotPvpBotsY).
                 m_PvpCameraOnlyWait = DrawFromQuantiles(s_PvpStepQuantiles,
-                    distance <= PvpOpenCloseMeters ? s_PvpOpenCloseSeconds : s_PvpOpenSeconds) * SkaliaBotModifiers.ReactionTime;
+                    distance <= PvpOpenCloseMeters ? s_PvpOpenCloseSeconds : s_PvpOpenSeconds) * SkaliaBotModifiers.OpenFireDelay;
             }
             m_PvpCameraOnly = cameraOnly;
         }

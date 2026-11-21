@@ -374,7 +374,7 @@ namespace SkaliaDeps
             m_PvpHuntPoint = from;
             m_PvpWayInActive = false;
             if (meters <= PvpHuntMaxMeters
-                && now - Mathf.Max(m_PvpLastSeenAt, m_PvpHitFromAt) <= s_PvpHuntHoldSeconds[s_PvpHuntHoldSeconds.Length - 1]
+                && now - Mathf.Max(m_PvpLastSeenAt, m_PvpHitFromAt) <= s_PvpHuntHoldSeconds[s_PvpHuntHoldSeconds.Length - 1] * SkaliaBotModifiers.Persistence
                 && TryStartPvpHuntMove(here, meters, false, now, name, m_PvpLastSeenAt >= m_PvpHitFromAt))
             {
                 BotLog(LogLevel.Information,

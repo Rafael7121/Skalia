@@ -85,7 +85,7 @@ namespace SkaliaDeps
             }
             if (float.IsPositiveInfinity(m_PvpBreakAt))
             {
-                var wait = DrawFromQuantiles(s_PvpBreakQuantiles, s_PvpBreakSeconds);
+                var wait = DrawFromQuantiles(s_PvpBreakQuantiles, s_PvpBreakSeconds) / SkaliaBotModifiers.HealSpeed;
                 m_PvpBreakAt = now + wait;
                 BotLog(LogLevel.Information,
                     "PvP: vida {Health} na luta com {Name}; curativo em {Wait:0.0}s.",

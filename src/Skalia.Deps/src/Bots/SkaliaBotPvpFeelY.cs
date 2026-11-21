@@ -196,7 +196,8 @@ namespace SkaliaDeps
                 text = "vi de onde veio";
                 return true;
             }
-            if (Random.value < PvpFoundOffScreenShare)
+            // 0.1.0-y17.36: times serverBot:modifiers:shotOrigin.
+            if (Random.value < SkaliaBotModifiers.Share(PvpFoundOffScreenShare, SkaliaBotModifiers.ShotOrigin))
             {
                 reactSeconds = s_PvpOffScreenReactSeconds;
                 text = "veio de fora da tela, achei de onde";
@@ -305,7 +306,8 @@ namespace SkaliaDeps
             {
                 m_PvpStepUntil = now + DrawFromQuantiles(s_PvpStepQuantiles, s_PvpStepSeconds);
                 var band = PvpBand(meters);
-                if (Random.value >= s_PvpMoveShare[band])
+                // 0.1.0-y17.36: times serverBot:modifiers:strafing.
+                if (Random.value >= SkaliaBotModifiers.Share(s_PvpMoveShare[band], SkaliaBotModifiers.Strafing))
                 {
                     m_PvpStepAnalog = 0x11;
                 }
@@ -380,7 +382,7 @@ namespace SkaliaDeps
             }
             packet.primaryAttack = EAttackInputFlags.Stop;
             m_PvpTriggerHeld = false;
-            m_NextAttackTime = Mathf.Max(m_NextAttackTime, now + DrawFromQuantiles(s_PvpStepQuantiles, s_PvpGapSeconds));
+            m_NextAttackTime = Mathf.Max(m_NextAttackTime, now + DrawFromQuantiles(s_PvpStepQuantiles, s_PvpGapSeconds) * SkaliaBotModifiers.BurstPause);
         }
 
         // Hit and the shooter not found (the tester, 16/11: going on as before

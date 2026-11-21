@@ -28,9 +28,9 @@ namespace SkaliaDeps
     //   0.16 times a second and run 45% of the time; the bots 0.34.
     internal sealed partial class SkaliaBotIdleSimulation
     {
-        private const int StunKiteMaxChasers = 5;
+        private static int StunKiteMaxChasers => SkaliaBotModifiers.Count(5, SkaliaBotModifiers.HordeCourage);
         private const float ChaserMeters = 40f;
-        private const int BigGroupCount = 6;
+        private static int BigGroupCount => SkaliaBotModifiers.Count(6, SkaliaBotModifiers.HordeCourage);
         private const float BigGroupLeaveNearest = 3.6f;
         private const float SwapRetreatMeters = 8f;
         private const float SwapSprintStamina = 33f;

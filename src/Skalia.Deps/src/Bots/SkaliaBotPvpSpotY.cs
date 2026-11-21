@@ -61,7 +61,7 @@ namespace SkaliaDeps
             {
                 m_PvpSpot = position;
                 m_PvpSpotRounds = 0;
-                m_PvpSpotLimit = Mathf.Max(1, Mathf.RoundToInt(DrawFromQuantiles(s_PvpSpotQuantiles, s_PvpSpotRounds)));
+                m_PvpSpotLimit = Mathf.Max(1, Mathf.RoundToInt(DrawFromQuantiles(s_PvpSpotQuantiles, s_PvpSpotRounds) / SkaliaBotModifiers.Repositioning));
                 m_PvpSpotBurned = false;
             }
             m_PvpSpotRounds += fired;

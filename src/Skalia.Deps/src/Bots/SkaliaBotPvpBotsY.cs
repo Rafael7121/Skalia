@@ -384,7 +384,7 @@ namespace SkaliaDeps
                     || (IsPvpEnemyFacingMe(best) && (IsPvpArmedToTheEye(best) || bestDistance <= PvpMeleeChaseMeters))
                     ? now
                     : now + DrawFromQuantiles(s_PvpStepQuantiles,
-                        bestDistance <= PvpOpenCloseMeters ? s_PvpOpenCloseSeconds : s_PvpOpenSeconds) * SkaliaBotModifiers.ReactionTime;
+                        bestDistance <= PvpOpenCloseMeters ? s_PvpOpenCloseSeconds : s_PvpOpenSeconds) * SkaliaBotModifiers.OpenFireDelay;
             }
             // 0.1.0-y17.3 (the tester, 18/11, Paradise Point: AlemaoGamer, gun in
             // hand with 11 rounds, "era pra ele ter rasgado ele na bala").

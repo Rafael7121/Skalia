@@ -62,7 +62,7 @@ namespace SkaliaDeps
             }
             var to = origin - eye;
             var meters = to.GetHorizontalMagnitude();
-            var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) * (Random.value < 0.5f ? -1f : 1f);
+            var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) / SkaliaBotModifiers.ShotOrigin * (Random.value < 0.5f ? -1f : 1f);
             var yaw = DirectionToYaw(to) + error;
             var band = s_ShotBandMeters[PvpBand(meters)];
             var same = IsShotSectorFresh(now)

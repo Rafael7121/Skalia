@@ -100,8 +100,10 @@ namespace SkaliaDeps
         // player kills. Armed (a real melee or a gun it can shoot), with 50+
         // health and only common zombies (walkers, crawlers, runners), up to
         // 4 within 8m are fought; the gun comes out for 3+ (IsGunWorthyFight).
-        private const int SmallGroupMaxZombies = 4;
-        private const float SmallGroupMinHealth = 50f;
+        // 0.1.0-y17.36: SmallGroupMaxZombies, StunKiteMaxChasers and BigGroupCount
+        // times serverBot:modifiers:hordeCourage, SmallGroupMinHealth divided.
+        private static int SmallGroupMaxZombies => SkaliaBotModifiers.Count(4, SkaliaBotModifiers.HordeCourage);
+        private static float SmallGroupMinHealth => 50f / SkaliaBotModifiers.HordeCourage;
         private const float SmallGroupRadiusMeters = 8f;
         private float m_NextSmallGroupLogAt;
 

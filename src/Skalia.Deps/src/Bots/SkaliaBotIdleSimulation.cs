@@ -11855,9 +11855,11 @@ namespace SkaliaDeps
                 // 0.2.2y: the swing's own length (the game takes no new
                 // swing before it ends). The 0.65s floor was slower than the
                 // players: 0.65s median between blows, 0.44s p25 (08/11).
+                // 0.1.0-y17.36: both over serverBot:modifiers:swingSpeed,
+                // never under the swing itself.
                 attackDelay = Mathf.Max(
-                    0.44f,
-                    meleeAnimationLength + 0.08f);
+                    0.44f / SkaliaBotModifiers.SwingSpeed,
+                    meleeAnimationLength + 0.08f / SkaliaBotModifiers.SwingSpeed);
             }
 
             if (usage != ERaycastInfoUsage.Gun && m_CombatRetreatPending)
@@ -12238,7 +12240,8 @@ namespace SkaliaDeps
             // 0.2.2y: the players hit the head with 96% of the blade
             // blows on 08/11 (345 of 361); a body blow of a worn blade
             // without Overkill does not stun.
-            m_MeleeAimHeight = Random.value < 0.96f
+            // 0.1.0-y17.36: times serverBot:modifiers:meleeHeadshots.
+            m_MeleeAimHeight = Random.value < SkaliaBotModifiers.Share(0.96f, SkaliaBotModifiers.MeleeHeadshots)
                 ? Random.Range(0.86f, 0.93f)
                 : Random.Range(0.62f, 0.76f);
             m_MeleeAimSide = Random.Range(-0.25f, 0.25f);

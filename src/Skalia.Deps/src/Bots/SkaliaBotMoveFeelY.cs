@@ -68,12 +68,14 @@ namespace SkaliaDeps
 
         private static float DrawPlayersSprintRun()
         {
-            return DrawFromQuantiles(s_MoveRunQuantiles, s_PlayersSprintRunSeconds);
+            // 0.1.0-y17.36: times serverBot:modifiers:sprinting, the walks
+            // between divided.
+            return DrawFromQuantiles(s_MoveRunQuantiles, s_PlayersSprintRunSeconds) * SkaliaBotModifiers.Sprinting;
         }
 
         private static float DrawPlayersWalkBetweenSprints()
         {
-            return DrawFromQuantiles(s_MoveRunQuantiles, s_PlayersWalkBetweenSeconds);
+            return DrawFromQuantiles(s_MoveRunQuantiles, s_PlayersWalkBetweenSeconds) / SkaliaBotModifiers.Sprinting;
         }
 
         private static float NextMoveLookGap(bool sprinting)

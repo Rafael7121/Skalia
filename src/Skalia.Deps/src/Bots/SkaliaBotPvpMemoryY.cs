@@ -112,7 +112,7 @@ namespace SkaliaDeps
                     // Where the steps are, with the error of a turn to a
                     // sound (as a shot, SkaliaBotShotSectorY).
                     var to = other.Who.transform.position - m_Player.transform.position;
-                    var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) * (Random.value < 0.5f ? -1f : 1f);
+                    var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) / SkaliaBotModifiers.ShotOrigin * (Random.value < 0.5f ? -1f : 1f);
                     other.Point = m_Player.transform.position
                         + Quaternion.Euler(0f, error, 0f) * new Vector3(to.x, 0f, to.z);
                     other.At = now;
@@ -314,7 +314,7 @@ namespace SkaliaDeps
             m_PvpLastHeardAt = now;
             m_PvpLastHitAt = now;
             var to = best.transform.position - position;
-            var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) * (Random.value < 0.5f ? -1f : 1f);
+            var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) / SkaliaBotModifiers.ShotOrigin * (Random.value < 0.5f ? -1f : 1f);
             var believed = position + Quaternion.Euler(0f, error, 0f) * new Vector3(to.x, 0f, to.z);
             m_PvpHitFrom = believed;
             m_PvpHitFromAt = now;
@@ -367,7 +367,7 @@ namespace SkaliaDeps
             m_PvpLastHeardAt = now;
             m_PvpLastHitAt = now;
             var to = best.transform.position - position;
-            var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) * (Random.value < 0.5f ? -1f : 1f);
+            var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) / SkaliaBotModifiers.ShotOrigin * (Random.value < 0.5f ? -1f : 1f);
             var believed = position + Quaternion.Euler(0f, error, 0f) * new Vector3(to.x, 0f, to.z);
             m_PvpHitFrom = believed;
             m_PvpHitFromAt = now;
@@ -438,7 +438,7 @@ namespace SkaliaDeps
             var coming = toward >= PvpSecondStepsTowardMeters && meters < knownMeters;
             m_PvpSecondStepsAt = now;
             var to = at - position;
-            var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) * (Random.value < 0.5f ? -1f : 1f);
+            var error = DrawFromQuantiles(s_ShotErrorQuantiles, s_ShotErrorDegrees) / SkaliaBotModifiers.ShotOrigin * (Random.value < 0.5f ? -1f : 1f);
             var believed = position + Quaternion.Euler(0f, error, 0f) * new Vector3(to.x, 0f, to.z);
             m_PvpHitFrom = believed;
             m_PvpHitFromAt = now;

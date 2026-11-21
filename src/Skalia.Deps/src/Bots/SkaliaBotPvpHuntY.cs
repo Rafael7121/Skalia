@@ -37,7 +37,8 @@ namespace SkaliaDeps
     {
         private const float PvpHuntMaxMeters = 60f;
         private const float PvpHuntHoldShare = 5f / 12f;
-        private const float PvpHuntPushShare = 2f / 12f;
+        // 0.1.0-y17.36: times serverBot:modifiers:chase, at most the 7 of 12 that moved.
+        private static float PvpHuntPushShare => SkaliaBotModifiers.Chase == 1f ? 2f / 12f : System.Math.Min(1f - PvpHuntHoldShare, 2f / 12f * SkaliaBotModifiers.Chase);
         // 0.1.0-y17.6 (test of 18/11, 17:08:20): Vultox lost the tester at 22m
         // behind the corner of a house, went "direto ate la" at a sprint
         // and ran into him waiting at the corner: two rounds in the head
@@ -374,7 +375,8 @@ namespace SkaliaDeps
         {
             m_PvpWayInActive = false;
             var lastContact = Mathf.Max(m_PvpLastSeenAt, m_PvpHitFromAt);
-            var until = lastContact + s_PvpHuntHoldSeconds[Random.Range(0, s_PvpHuntHoldSeconds.Length)];
+            // 0.1.0-y17.36: times serverBot:modifiers:persistence.
+            var until = lastContact + s_PvpHuntHoldSeconds[Random.Range(0, s_PvpHuntHoldSeconds.Length)] * SkaliaBotModifiers.Persistence;
             m_PvpHuntPhase = 1;
             m_PvpHuntUntil = Mathf.Max(until, now + 5f);
             m_PvpHuntYaw = m_CurrentYaw;
