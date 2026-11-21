@@ -1012,11 +1012,11 @@ namespace Skalia.Launcher
             var running = m_Server.IsRunning;
             var ready = running && m_Server.IsReady;
             var mesh = running && !ready ? m_Server.BotMeshPercent : null;
-            if (mesh.HasValue && mesh.Value / 10 != m_LastMeshStep)
+            if (mesh.HasValue && mesh.Value != m_LastMeshStep)
             {
-                // Progresso no Console a cada 10%.
-                m_LastMeshStep = mesh.Value / 10;
-                AppendLog(L.Tr("Preparando os bots: ") + (m_LastMeshStep * 10) + "%");
+                // O plugin avanca por etapas (0, 5, 10, 15, 25...); cada uma vira uma linha no Console.
+                m_LastMeshStep = mesh.Value;
+                AppendLog(L.Tr("Preparando os bots: ") + mesh.Value + "%");
             }
             if (!running || ready)
             {
@@ -1047,7 +1047,7 @@ namespace Skalia.Launcher
             }
             else if (mesh.HasValue)
             {
-                SetStatus(L.Tr("Preparando os bots... ") + mesh.Value + "%", Theme.Warn, L.Tr("O mapa carregou; os bots estão aprendendo o caminho."));
+                SetStatus(L.Tr("Preparando os bots... ") + mesh.Value + "%", Theme.Warn, L.Tr("Montar o caminho dos bots pode levar até 2 minutos; o número fica parado nesse tempo."));
             }
             else
             {

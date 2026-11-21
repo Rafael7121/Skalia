@@ -120,7 +120,7 @@ namespace Skalia.Launcher
             { "Preparando os bots: ", "Preparing the bots: " },
             { "Servidor pronto. Clique em ENTRAR NO JOGO.", "Server ready. Click JOIN GAME." },
             { "Preparando os bots... ", "Preparing the bots... " },
-            { "O mapa carregou; os bots estão aprendendo o caminho.", "The map is loaded; the bots are learning the way around." },
+            { "Montar o caminho dos bots pode levar até 2 minutos; o número fica parado nesse tempo.", "Building the bots' paths can take up to 2 minutes; the number holds still meanwhile." },
             { "Servidor iniciado. Carregando o mapa...", "Server started. Loading the map..." },
             { "Mapa ", "Map " },
             { "OpenMod instalado.", "OpenMod installed." },
