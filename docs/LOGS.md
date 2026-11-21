@@ -7,6 +7,10 @@ The bots write to the OpenMod log of the server,
 [2026-11-18 22:29:44 INF][SkaliaDeps.SkaliaBotAuthenticationService] [Vultox] PvP: perdi TheGhostSniper; fico olhando para onde ele estava a 84m por 54s.
 ```
 
+Only with `botLogs: true` under `serverBot:` in the plugin's `config.yaml`
+(the launcher's Developer > Bot logs); off, which is the default, the bots
+write only warnings and errors.
+
 The time, the level, the bot's name in brackets, then the message (in
 Portuguese, the language of the test server). Positions are `(x, y, z)` with a
 comma as the decimal mark; `/irpara <x> <y> <z>` takes you there.

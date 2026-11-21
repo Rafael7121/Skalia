@@ -23,6 +23,9 @@ serverCapacity:
 serverBot:
   # SKALIA: chama todos os bots de bots.json quando o mapa termina de carregar.
   autoCallOnStart: true
+  # SKALIA: log dos bots (Information e Debug). O launcher escreve esta chave
+  # (Developer > Bot logs). false ou ausente: so avisos e erros dos bots.
+  botLogs: false
   ipAddress: "127.0.0.2"
   port: 27018
   respawnDelaySeconds: 3

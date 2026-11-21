@@ -115,6 +115,9 @@ Settings live under `serverBot:` in `src/Skalia.Deps/config.yaml`.
 - **Versions** go in `InformationalVersion` of `Skalia.Deps.csproj` and must be
   SemVer (`0.1.0-y17.28`); the log prints it at load, so every log can be tied
   to a build.
+- Turn the bot logs on (launcher: Developer > Bot logs, or `serverBot:botLogs:
+  true` in the plugin's `config.yaml`); off, the bots write only warnings and
+  errors.
 - After loading, check the log for the lines the change should produce (see
   [docs/LOGS.md](docs/LOGS.md)), then play a session with the recorder on.
 

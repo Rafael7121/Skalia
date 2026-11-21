@@ -3,7 +3,7 @@
 What is known not to work, not yet tested, or not built. Kept up to date with
 each bot version (`InformationalVersion` in `src/Skalia.Deps/Skalia.Deps.csproj`).
 
-Last update: 0.1.0-y17.29.
+Last update: 0.1.0-y17.30.
 
 ## Built but never run in a game
 
@@ -21,6 +21,7 @@ builds and loads, but no one has played against it yet:
 | y17.27 | Movement measured against players: searching an area sprints outdoors, sprint and walk lengths, looks to the side while sprinting, hops in fight sprints |
 | y17.28 | A player lost from sight up high and standing still is flanked by a route he does not see |
 | y17.29 | y17.27's sprint and walk lengths timed by the recording's own clock |
+| y17.30 | The bots' Information and Debug log lines only with `serverBot:botLogs: true` |
 
 Play a session with the recorder on (`/gravar ligar`, `/gravar bots ligar`)
 before adding more on top.

@@ -74,7 +74,10 @@ namespace SkaliaDeps
             IConfiguration configuration,
             ILogger<SkaliaBotAuthenticationService> logger)
         {
-            m_Logger = logger;
+            // 0.1.0-y17.30: serverBot:botLogs (SkaliaBotLogFilter).
+            m_Logger = configuration.GetValue("serverBot:botLogs", false)
+                ? logger
+                : new SkaliaBotLogFilter<SkaliaBotAuthenticationService>(logger, LogLevel.Warning);
             var configuredAddress = configuration.GetValue("serverBot:ipAddress", "127.0.0.2");
             if (!IPAddress.TryParse(configuredAddress, out var parsedAddress)
                 || parsedAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
