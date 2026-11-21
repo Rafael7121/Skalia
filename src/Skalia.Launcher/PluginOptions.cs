@@ -92,6 +92,24 @@ namespace Skalia.Launcher
             Slide(TabAim, "serverBot:modifiers:accuracy", "Precisão", "Acima de 1x a mira fecha mais.", 0.25, 1.75),
             Slide(TabSurvival, "serverBot:modifiers:courage", "Coragem", "Acima de 1x lutam com menos vida antes de fugir ou se curar.", 0.25, 1.75),
             Slide(TabMovement, "serverBot:modifiers:cover", "Uso de cobertura", "Acima de 1x se agacham e se escondem mais.", 0.25, 1.75),
+            Slide(TabPerception, "serverBot:modifiers:shotOrigin", "Noção de onde veio o tiro", "Acima de 1x acertam mais o lado de um tiro que veio de fora da tela.", 0.25, 1.75),
+            Slide(TabPerception, "serverBot:modifiers:nightVision", "Visão à noite", "Acima de 1x avistam jogadores mais de longe à noite.", 0.25, 1.75),
+            Slide(TabAim, "serverBot:modifiers:headshots", "Tiros na cabeça", "Acima de 1x miram mais na cabeça.", 0.25, 1.75),
+            Slide(TabAim, "serverBot:modifiers:recoilControl", "Controle de recoil", "Acima de 1x seguram melhor o coice entre um tiro e outro.", 0.25, 1.75),
+            Slide(TabAim, "serverBot:modifiers:burstLength", "Tamanho da rajada", "Acima de 1x seguram o gatilho por mais tempo.", 0.25, 1.75),
+            Slide(TabAim, "serverBot:modifiers:burstPause", "Pausa entre rajadas", "Acima de 1x esperam mais entre uma rajada e outra.", 0.25, 1.75),
+            Slide(TabAim, "serverBot:modifiers:openFireDelay", "Espera para abrir fogo", "Abaixo de 1x atiram antes depois de ver você.", 0.25, 1.75),
+            Slide(TabMovement, "serverBot:modifiers:strafing", "Movimento na troca de tiro", "Acima de 1x andam de lado e recuam mais enquanto atiram.", 0.25, 1.75),
+            Slide(TabMovement, "serverBot:modifiers:repositioning", "Troca de posição", "Acima de 1x saem do lugar com menos tiros.", 0.25, 1.75),
+            Slide(TabMovement, "serverBot:modifiers:sprinting", "Correria", "Acima de 1x correm mais em vez de andar.", 0.25, 1.75),
+            Slide(TabHunt, "serverBot:modifiers:persistence", "Persistência", "Acima de 1x procuram você e lembram da luta por mais tempo.", 0.25, 1.75),
+            Slide(TabHunt, "serverBot:modifiers:chase", "Perseguição", "Acima de 1x avançam mais até onde você estava.", 0.25, 1.75),
+            Slide(TabHunt, "serverBot:modifiers:flanking", "Flanco", "Acima de 1x dão mais a volta em vez de vir reto.", 0.25, 1.75),
+            Slide(TabSurvival, "serverBot:modifiers:healSpeed", "Rapidez para se curar", "Acima de 1x pegam o curativo mais rápido.", 0.25, 1.75),
+            Slide(TabSurvival, "serverBot:modifiers:fleeWhenHurt", "Fugir ferido", "Acima de 1x correm mais depois de se curar, em vez de ficar.", 0.25, 1.75),
+            Slide(TabZombies, "serverBot:modifiers:hordeCourage", "Encarar horda", "Acima de 1x lutam contra mais zumbis antes de correr.", 0.25, 1.75),
+            Slide(TabZombies, "serverBot:modifiers:meleeHeadshots", "Golpes na cabeça", "Acima de 1x acertam mais a cabeça no corpo a corpo.", 0.25, 1.75),
+            Slide(TabZombies, "serverBot:modifiers:swingSpeed", "Ritmo dos golpes", "Acima de 1x golpeiam mais rápido (nunca além da animação).", 0.25, 1.75),
         };
 
         public static PluginOption Find(string id) => All.FirstOrDefault(o => o.Id == id);
@@ -104,25 +122,19 @@ namespace Skalia.Launcher
 
         public static readonly Dictionary<string, Dictionary<string, string>> BotProfileValues = new Dictionary<string, Dictionary<string, string>>
         {
-            // Padrao e como os jogadores gravados jogam hoje.
-            { "default", Profile(1, 1, 1, 1, 1, 1, 1, 1) },
-            { "hard", Profile(1.25, 1, 1.25, 0.75, 1.25, 1.25, 1.25, 1.25) },
-            { "tryhard", Profile(1.5, 1.25, 1.5, 0.5, 1.5, 1.5, 1.5, 1.5) },
+            // Padrao e como os jogadores gravados jogam hoje: tudo 1x.
+            { "default", Profile() },
+            { "hard", Profile(new Dictionary<string, double> { { "visionRange", 1.25 }, { "fieldOfView", 1 }, { "hearing", 1.25 }, { "reactionTime", 0.75 }, { "accuracy", 1.25 }, { "courage", 1.25 }, { "aimSpeed", 1.25 }, { "cover", 1.25 }, { "shotOrigin", 1.25 }, { "nightVision", 1.25 }, { "headshots", 1.25 }, { "recoilControl", 1.25 }, { "strafing", 1.25 }, { "repositioning", 1.25 }, { "persistence", 1.25 }, { "chase", 1.25 }, { "flanking", 1.25 }, { "healSpeed", 1.25 }, { "hordeCourage", 1.25 }, { "meleeHeadshots", 1.25 }, { "swingSpeed", 1.25 }, { "openFireDelay", 0.75 } }) },
+            { "tryhard", Profile(new Dictionary<string, double> { { "visionRange", 1.5 }, { "fieldOfView", 1.25 }, { "hearing", 1.5 }, { "reactionTime", 0.5 }, { "accuracy", 1.5 }, { "courage", 1.5 }, { "aimSpeed", 1.5 }, { "cover", 1.5 }, { "shotOrigin", 1.5 }, { "nightVision", 1.5 }, { "headshots", 1.5 }, { "recoilControl", 1.5 }, { "strafing", 1.5 }, { "repositioning", 1.5 }, { "persistence", 1.5 }, { "chase", 1.5 }, { "flanking", 1.5 }, { "healSpeed", 1.5 }, { "hordeCourage", 1.5 }, { "meleeHeadshots", 1.5 }, { "swingSpeed", 1.5 }, { "openFireDelay", 0.5 } }) },
         };
 
-        private static Dictionary<string, string> Profile(double vision, double fov, double hearing, double reaction, double accuracy, double courage,
-            double aimSpeed, double cover) =>
-            new Dictionary<string, string>
+        /// <summary>Valor de cada modificador do perfil; o que nao estiver na lista fica 1x.</summary>
+        private static Dictionary<string, string> Profile(Dictionary<string, double> values = null) =>
+            All.Where(o => o.Group == BotDifficulty).ToDictionary(o => o.Id, o =>
             {
-                { "serverBot:modifiers:visionRange", N(vision) },
-                { "serverBot:modifiers:fieldOfView", N(fov) },
-                { "serverBot:modifiers:hearing", N(hearing) },
-                { "serverBot:modifiers:reactionTime", N(reaction) },
-                { "serverBot:modifiers:accuracy", N(accuracy) },
-                { "serverBot:modifiers:courage", N(courage) },
-                { "serverBot:modifiers:aimSpeed", N(aimSpeed) },
-                { "serverBot:modifiers:cover", N(cover) },
-            };
+                var key = o.Id.Substring("serverBot:modifiers:".Length);
+                return values != null && values.TryGetValue(key, out var value) ? N(value) : o.Default;
+            });
 
         private static string N(double value) => value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
 
