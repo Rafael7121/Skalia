@@ -46,9 +46,10 @@ namespace Skalia.Launcher
         public const string TabAim = "Mira e tiro";
         public const string TabMovement = "Movimento";
         public const string TabHunt = "Caça";
+        public const string TabLoot = "Saque";
         public const string TabSurvival = "Sobrevivência";
         public const string TabZombies = "Zumbis";
-        public static readonly string[] BotTabs = { TabPerception, TabAim, TabMovement, TabHunt, TabSurvival, TabZombies };
+        public static readonly string[] BotTabs = { TabPerception, TabAim, TabMovement, TabHunt, TabLoot, TabSurvival, TabZombies };
 
         public static readonly PluginOption[] All =
         {
@@ -105,6 +106,17 @@ namespace Skalia.Launcher
             Slide(TabZombies, "serverBot:modifiers:hordeCourage", "Encarar horda", "Acima de 1x lutam contra mais zumbis antes de correr.", 0.25, 1.75),
             Slide(TabZombies, "serverBot:modifiers:meleeHeadshots", "Golpes na cabeça", "Acima de 1x acertam mais a cabeça no corpo a corpo.", 0.25, 1.75),
             Slide(TabZombies, "serverBot:modifiers:swingSpeed", "Ritmo dos golpes", "Acima de 1x golpeiam mais rápido (nunca além da animação).", 0.25, 1.75),
+            Slide(TabPerception, "serverBot:modifiers:footsteps", "Ouvir passos", "Acima de 1x ouvem passos de mais longe.", 0.25, 1.75),
+            Slide(TabPerception, "serverBot:modifiers:shotAwareness", "Atenção a tiros", "Acima de 1x viram mais para um tiro ouvido e olham por mais tempo.", 0.25, 1.75),
+            Slide(TabPerception, "serverBot:modifiers:lookAround", "Olhar em volta", "Acima de 1x olham mais para os lados no caminho.", 0.25, 1.75),
+            Slide(TabAim, "serverBot:modifiers:hipFire", "Tiro do quadril", "Acima de 1x atiram mais sem mirar de perto.", 0.25, 1.75),
+            Slide(TabMovement, "serverBot:modifiers:fightHops", "Pulos na luta", "Acima de 1x pulam mais quando correm na luta.", 0.25, 1.75),
+            Slide(TabMovement, "serverBot:modifiers:hops", "Pulos no caminho", "Acima de 1x pulam mais fora de combate.", 0.25, 1.75),
+            Slide(TabMovement, "serverBot:modifiers:staminaReserve", "Fôlego para correr", "Acima de 1x esperam mais fôlego antes de voltar a correr.", 0.25, 1.75),
+            Slide(TabHunt, "serverBot:modifiers:gunSilence", "Silêncio após tiro", "Acima de 1x ficam mais tempo sem atirar depois de ouvir tiro de quem não veem.", 0.25, 1.75),
+            Slide(TabLoot, "serverBot:modifiers:coveredLoot", "Saque coberto", "Acima de 1x saqueiam só sob teto por mais tempo depois de uma luta.", 0.25, 1.75),
+            Slide(TabZombies, "serverBot:modifiers:zombieAimSpeed", "Mira em zumbi", "Acima de 1x miram mais rápido antes de atirar em zumbi.", 0.25, 1.75),
+            Slide(TabZombies, "serverBot:modifiers:hordeEscape", "Fuga da horda", "Acima de 1x correm de um grupo grande mais cedo, com o zumbi mais longe.", 0.25, 1.75),
         };
 
         public static PluginOption Find(string id) => All.FirstOrDefault(o => o.Id == id);
@@ -119,8 +131,8 @@ namespace Skalia.Launcher
         {
             // Padrao e como os jogadores gravados jogam hoje: tudo 1x.
             { "default", Profile() },
-            { "hard", Profile(new Dictionary<string, double> { { "visionRange", 1.25 }, { "fieldOfView", 1 }, { "hearing", 1.25 }, { "reactionTime", 0.75 }, { "accuracy", 1.25 }, { "courage", 1.25 }, { "aimSpeed", 1.25 }, { "cover", 1.25 }, { "shotOrigin", 1.25 }, { "strafing", 1.25 }, { "repositioning", 1.25 }, { "persistence", 1.25 }, { "chase", 1.25 }, { "healSpeed", 1.25 }, { "hordeCourage", 1.25 }, { "meleeHeadshots", 1.25 }, { "swingSpeed", 1.25 }, { "openFireDelay", 0.75 } }) },
-            { "tryhard", Profile(new Dictionary<string, double> { { "visionRange", 1.5 }, { "fieldOfView", 1.25 }, { "hearing", 1.5 }, { "reactionTime", 0.5 }, { "accuracy", 1.5 }, { "courage", 1.5 }, { "aimSpeed", 1.5 }, { "cover", 1.5 }, { "shotOrigin", 1.5 }, { "strafing", 1.5 }, { "repositioning", 1.5 }, { "persistence", 1.5 }, { "chase", 1.5 }, { "healSpeed", 1.5 }, { "hordeCourage", 1.5 }, { "meleeHeadshots", 1.5 }, { "swingSpeed", 1.5 }, { "openFireDelay", 0.5 } }) },
+            { "hard", Profile(new Dictionary<string, double> { { "zombieAimSpeed", 1.25 }, { "fightHops", 1.25 }, { "lookAround", 1.25 }, { "shotAwareness", 1.25 }, { "footsteps", 1.25 }, { "visionRange", 1.25 }, { "fieldOfView", 1 }, { "hearing", 1.25 }, { "reactionTime", 0.75 }, { "accuracy", 1.25 }, { "courage", 1.25 }, { "aimSpeed", 1.25 }, { "cover", 1.25 }, { "shotOrigin", 1.25 }, { "strafing", 1.25 }, { "repositioning", 1.25 }, { "persistence", 1.25 }, { "chase", 1.25 }, { "healSpeed", 1.25 }, { "hordeCourage", 1.25 }, { "meleeHeadshots", 1.25 }, { "swingSpeed", 1.25 }, { "openFireDelay", 0.75 } }) },
+            { "tryhard", Profile(new Dictionary<string, double> { { "zombieAimSpeed", 1.5 }, { "fightHops", 1.5 }, { "lookAround", 1.5 }, { "shotAwareness", 1.5 }, { "footsteps", 1.5 }, { "visionRange", 1.5 }, { "fieldOfView", 1.25 }, { "hearing", 1.5 }, { "reactionTime", 0.5 }, { "accuracy", 1.5 }, { "courage", 1.5 }, { "aimSpeed", 1.5 }, { "cover", 1.5 }, { "shotOrigin", 1.5 }, { "strafing", 1.5 }, { "repositioning", 1.5 }, { "persistence", 1.5 }, { "chase", 1.5 }, { "healSpeed", 1.5 }, { "hordeCourage", 1.5 }, { "meleeHeadshots", 1.5 }, { "swingSpeed", 1.5 }, { "openFireDelay", 0.5 } }) },
         };
 
         /// <summary>Valor de cada modificador do perfil; o que nao estiver na lista fica 1x.</summary>
