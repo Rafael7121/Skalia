@@ -3,7 +3,7 @@
 What is known not to work, not yet tested, or not built. Kept up to date with
 each bot version (`InformationalVersion` in `src/Skalia.Deps/Skalia.Deps.csproj`).
 
-Last update: 0.1.0-y17.34.
+Last update: 0.1.0-y17.35.
 
 ## Built but never run in a game
 
@@ -25,7 +25,8 @@ builds and loads, but no one has played against it yet:
 | y17.31 | `tpa:enabled`, `home:enabled` (/home, /homes, /renomear), `vault:enabled` and `automaticReload:enabled`, all true when missing; a disabled command answers that it is off on this server |
 | y17.32 | `administration:hidden_action_complete` reads "Concluído" (its text was broken by a wrong encoding) |
 | y17.33 | The new navmesh starts with the map; `skalia.ready` and the automatic bot call wait for it, `skalia.loading` holds the share done for the launcher; a failed, off or missing mesh does not hold the server |
-| y17.34 | `serverBot:modifiers`: difficulty multipliers (0.25-2) of the recorded bases for vision, field of view, hearing, reaction, aim speed, accuracy, courage and cover; 1 is the recorded behaviour |
+| y17.34 | `serverBot:modifiers`: difficulty multipliers of the recorded bases for vision, field of view, hearing, reaction, aim speed, accuracy, courage and cover; 1 is the recorded behaviour |
+| y17.35 | The modifiers take any decimal within the launcher's sliders (0.25-1.75, fieldOfView 0.5-1.5), clamped outside them; one that is not a number counts as 1 |
 
 Play a session with the recorder on (`/gravar ligar`, `/gravar bots ligar`)
 before adding more on top.

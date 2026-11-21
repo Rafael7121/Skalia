@@ -6,8 +6,10 @@ namespace SkaliaDeps
 {
     // 0.1.0-y17.34 (the tester, 21/11, the launcher's difficulty: "Vai ser
     // padrao (o que ja e hoje) dificil e tryhard"). serverBot:modifiers:
-    // multipliers of the bases taken from the players' recordings, 0.25 to
-    // 2, read at load. 1 (or missing) is the recorded behaviour, untouched:
+    // multipliers of the bases taken from the players' recordings, read at
+    // load. 0.1.0-y17.35: any decimal within the launcher's sliders (0.25 to
+    // 1.75, fieldOfView 0.5 to 1.5), clamped outside them; missing or not a
+    // number, 1. 1 (or missing) is the recorded behaviour, untouched:
     // every use multiplies or divides by exactly 1.
     // - visionRange: how far a man is seen (PvpMaxMeters 250 and the gun's
     //   range; past 1 only the 250m cap grows, never past the gun's range)
@@ -31,7 +33,9 @@ namespace SkaliaDeps
     internal static class SkaliaBotModifiers
     {
         public const float Minimum = 0.25f;
-        public const float Maximum = 2f;
+        public const float Maximum = 1.75f;
+        public const float FieldOfViewMinimum = 0.5f;
+        public const float FieldOfViewMaximum = 1.5f;
 
         public static float VisionRange { get; private set; } = 1f;
         public static float FieldOfView { get; private set; } = 1f;
@@ -44,16 +48,16 @@ namespace SkaliaDeps
 
         public static void Load(IConfiguration configuration, ILogger logger)
         {
-            VisionRange = Read(configuration, logger, "visionRange");
-            FieldOfView = Read(configuration, logger, "fieldOfView");
-            Hearing = Read(configuration, logger, "hearing");
-            ReactionTime = Read(configuration, logger, "reactionTime");
-            AimSpeed = Read(configuration, logger, "aimSpeed");
-            Accuracy = Read(configuration, logger, "accuracy");
-            Courage = Read(configuration, logger, "courage");
-            Cover = Read(configuration, logger, "cover");
-            var fightDistance = Read(configuration, logger, "fightDistance");
-            var looting = Read(configuration, logger, "looting");
+            VisionRange = Read(configuration, logger, "visionRange", Minimum, Maximum);
+            FieldOfView = Read(configuration, logger, "fieldOfView", FieldOfViewMinimum, FieldOfViewMaximum);
+            Hearing = Read(configuration, logger, "hearing", Minimum, Maximum);
+            ReactionTime = Read(configuration, logger, "reactionTime", Minimum, Maximum);
+            AimSpeed = Read(configuration, logger, "aimSpeed", Minimum, Maximum);
+            Accuracy = Read(configuration, logger, "accuracy", Minimum, Maximum);
+            Courage = Read(configuration, logger, "courage", Minimum, Maximum);
+            Cover = Read(configuration, logger, "cover", Minimum, Maximum);
+            var fightDistance = Read(configuration, logger, "fightDistance", Minimum, Maximum);
+            var looting = Read(configuration, logger, "looting", Minimum, Maximum);
             logger.LogInformation(
                 "Modificadores dos bots: visao {Vision}, campo de visao {Fov}, audicao {Hearing}, reacao {Reaction}, velocidade da mira {AimSpeed}, precisao {Accuracy}, coragem {Courage}, cobertura {Cover} (1 = como gravado).",
                 F(VisionRange), F(FieldOfView), F(Hearing), F(ReactionTime), F(AimSpeed), F(Accuracy), F(Courage), F(Cover));
@@ -65,19 +69,24 @@ namespace SkaliaDeps
             }
         }
 
-        private static float Read(IConfiguration configuration, ILogger logger, string key)
+        private static float Read(IConfiguration configuration, ILogger logger, string key, float minimum, float maximum)
         {
-            var value = configuration.GetValue("serverBot:modifiers:" + key, 1f);
-            if (float.IsNaN(value) || float.IsInfinity(value))
+            var text = configuration["serverBot:modifiers:" + key];
+            if (string.IsNullOrWhiteSpace(text))
             {
-                logger.LogWarning("Modificadores dos bots: {Key} invalido; usando 1.", key);
                 return 1f;
             }
-            if (value < Minimum || value > Maximum)
+            if (!float.TryParse(text.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
+                || float.IsNaN(value) || float.IsInfinity(value))
             {
-                var clamped = value < Minimum ? Minimum : Maximum;
+                logger.LogWarning("Modificadores dos bots: {Key} = '{Text}' nao e um numero; usando 1.", key, text);
+                return 1f;
+            }
+            if (value < minimum || value > maximum)
+            {
+                var clamped = value < minimum ? minimum : maximum;
                 logger.LogWarning("Modificadores dos bots: {Key} = {Value} fora de {Min}-{Max}; usando {Clamped}.",
-                    key, F(value), F(Minimum), F(Maximum), F(clamped));
+                    key, F(value), F(minimum), F(maximum), F(clamped));
                 return clamped;
             }
             return value;

@@ -32,7 +32,8 @@ serverBot:
   botLogs: false
   # SKALIA: dificuldade dos bots (o launcher grava pelos perfis Padrao,
   # Dificil e Tryhard). Multiplicam as bases das gravacoes dos jogadores;
-  # 1 ou ausente = como gravado. De 0.25 a 2. reactionTime menor = mais
+  # 1 ou ausente = como gravado. De 0.25 a 1.75 (fieldOfView de 0.5 a 1.5),
+  # qualquer decimal com ponto. reactionTime menor = mais
   # rapido; courage maior = foge e cura com menos vida. fightDistance e
   # looting nao tem base gravada e ficam sem efeito.
   modifiers:
